@@ -42,7 +42,7 @@ class DefaultTokenDataSource(
     init {
         scope.launch {
             val token = DefaultTokenStore.load()
-            _flow.value = token  // Now this WILL emit because it changes from LOADING_SENTINEL to null
+            _flow.value = token
             isInitialized.store(true)
         }
     }

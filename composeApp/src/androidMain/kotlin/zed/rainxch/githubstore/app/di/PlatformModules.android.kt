@@ -13,7 +13,7 @@ import zed.rainxch.githubstore.feature.install.Installer
 actual val platformModule: Module = module {
     single<Downloader> {
         AndroidDownloader(
-            context = get(), // Assumes you provide Android Context
+            context = get(),
             files = get()
         )
     }

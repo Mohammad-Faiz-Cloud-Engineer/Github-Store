@@ -19,7 +19,6 @@ class MainViewModel(
     val state = _state.asStateFlow()
 
     init {
-        // 1) Perform an explicit load for the initial state to avoid UI flicker.
         viewModelScope.launch {
             val initialToken = tokenDataSource.load()
             _state.update {
@@ -31,11 +30,10 @@ class MainViewModel(
             Logger.d("MainViewmodel") { initialToken.toString() }
         }
 
-        // 2) Observe subsequent updates (skip the initial cached null value from StateFlow).
         viewModelScope.launch {
             tokenDataSource
                 .tokenFlow
-                .drop(1) // skip the initial placeholder value to prevent auth->home flicker
+                .drop(1)
                 .distinctUntilChanged()
                 .collect { authInfo ->
                     _state.update { it.copy(isLoggedIn = authInfo != null) }

@@ -23,9 +23,9 @@ import zed.rainxch.githubstore.feature.search.presentation.SearchRoot
 @Composable
 fun AppNavigation(
     onAuthenticationChecked: () -> Unit = { },
-    navHostController: NavHostController = rememberNavController(),
     mainViewModel: MainViewModel = koinViewModel()
 ) {
+    val navHostController = rememberNavController()
     val state by mainViewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(state.isCheckingAuth) {
