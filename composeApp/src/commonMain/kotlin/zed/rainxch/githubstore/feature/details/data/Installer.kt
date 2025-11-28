@@ -13,7 +13,3 @@ interface Installer {
 }
 
 /** File location utilities provided per platform via DI. */
-interface FileLocationsProvider {
-    fun appDownloadsDir(): String
-    fun setExecutableIfNeeded(path: String)
-}

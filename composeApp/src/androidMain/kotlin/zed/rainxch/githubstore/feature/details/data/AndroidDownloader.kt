@@ -14,6 +14,7 @@ import java.util.UUID
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.last
+import zed.rainxch.githubstore.feature.details.domain.model.DownloadProgress
 
 class AndroidDownloader(
     private val context: Context,

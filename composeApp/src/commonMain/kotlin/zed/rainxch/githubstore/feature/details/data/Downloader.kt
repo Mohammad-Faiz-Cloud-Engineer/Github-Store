@@ -1,12 +1,8 @@
 package zed.rainxch.githubstore.feature.details.data
 
 import kotlinx.coroutines.flow.Flow
+import zed.rainxch.githubstore.feature.details.domain.model.DownloadProgress
 
-data class DownloadProgress(
-    val bytesDownloaded: Long,
-    val totalBytes: Long?,
-    val percent: Int?,
-)
 
 /**
  * Platform-agnostic downloader contract. Platform implementations are provided via DI.
