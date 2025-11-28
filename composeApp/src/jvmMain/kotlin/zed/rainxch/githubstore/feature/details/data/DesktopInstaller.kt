@@ -109,13 +109,7 @@ class DesktopInstaller(
     private fun installLinux(file: File, ext: String) {
         when (ext) {
             "appimage" -> {
-                files.setExecutableIfNeeded(file.absolutePath)
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().open(file)
-                } else {
-                    val pb = ProcessBuilder(file.absolutePath)
-                    pb.start()
-                }
+                installAppImage(file)
             }
 
             "deb" -> {
@@ -143,6 +137,103 @@ class DesktopInstaller(
 
             else -> throw IllegalArgumentException("Unsupported Linux installer: .$ext")
         }
+    }
+
+    private fun installAppImage(file: File) {
+        // Get Desktop directory
+        val desktopDir = getDesktopDirectory()
+
+        // Copy file to desktop with its original name
+        val destinationFile = File(desktopDir, file.name)
+
+        // If file already exists on desktop, add a number suffix
+        val finalDestination = if (destinationFile.exists()) {
+            generateUniqueFileName(desktopDir, file.name)
+        } else {
+            destinationFile
+        }
+
+        try {
+            // Copy the file
+            file.copyTo(finalDestination, overwrite = false)
+
+            // Make it executable
+            finalDestination.setExecutable(true, false)
+
+            // Optionally, try to open the desktop folder to show the file
+            try {
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(desktopDir)
+                }
+            } catch (e: Exception) {
+                // Ignore if we can't open the folder
+            }
+        } catch (e: IOException) {
+            throw IllegalStateException(
+                "Failed to copy AppImage to desktop: ${e.message}. " +
+                        "Please ensure you have write permissions to your Desktop folder.",
+                e
+            )
+        } catch (e: SecurityException) {
+            throw IllegalStateException(
+                "Security restrictions prevent copying AppImage to desktop.",
+                e
+            )
+        }
+    }
+
+    private fun getDesktopDirectory(): File {
+        // Try XDG user dirs first (most reliable on modern Linux)
+        try {
+            val process = ProcessBuilder("xdg-user-dir", "DESKTOP").start()
+            val output = process.inputStream.bufferedReader().readText().trim()
+            process.waitFor()
+
+            if (output.isNotEmpty() && output != "DESKTOP") {
+                val xdgDesktop = File(output)
+                if (xdgDesktop.exists() && xdgDesktop.isDirectory) {
+                    return xdgDesktop
+                }
+            }
+        } catch (e: Exception) {
+            // Fall through to alternatives
+        }
+
+        // Fallback to common Desktop locations
+        val homeDir = System.getProperty("user.home")
+        val desktopCandidates = listOf(
+            File(homeDir, "Desktop"),
+            File(homeDir, "desktop"),
+            File(homeDir, ".local/share/Desktop"),
+            File(homeDir) // Last resort: home directory
+        )
+
+        return desktopCandidates.firstOrNull { it.exists() && it.isDirectory }
+            ?: File(homeDir, "Desktop").also { it.mkdirs() }
+    }
+
+    private fun generateUniqueFileName(directory: File, originalName: String): File {
+        val nameWithoutExtension = originalName.substringBeforeLast(".")
+        val extension = originalName.substringAfterLast(".", "")
+
+        var counter = 1
+        var candidateFile: File
+
+        do {
+            val newName = if (extension.isNotEmpty()) {
+                "${nameWithoutExtension}_$counter.$extension"
+            } else {
+                "${nameWithoutExtension}_$counter"
+            }
+            candidateFile = File(directory, newName)
+            counter++
+        } while (candidateFile.exists() && counter < 1000)
+
+        if (candidateFile.exists()) {
+            throw IllegalStateException("Could not generate unique filename on desktop")
+        }
+
+        return candidateFile
     }
 
     private fun openTerminalForPackageInstall(packageManager: String, filePath: String) {
