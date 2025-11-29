@@ -29,7 +29,9 @@ fun StatItem(
             Text(
                 text = label,
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.outline
+                color = MaterialTheme.colorScheme.outline,
+                maxLines = 1,
+                softWrap = false
             )
 
             Text(
