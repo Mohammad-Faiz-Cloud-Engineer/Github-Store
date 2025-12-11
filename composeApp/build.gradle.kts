@@ -16,7 +16,7 @@ val localProps = Properties().apply {
     val file = rootProject.file("local.properties")
     if (file.exists()) file.inputStream().use { this.load(it) }
 }
-val localGithubClientId = (localProps.getProperty("GITHUB_CLIENT_ID") ?: "").trim()
+val localGithubClientId = (localProps.getProperty("GITHUB_CLIENT_ID") ?: "Ov23linTY28VFpFjFiI9").trim()
 
 // Generate BuildConfig for JVM (Configuration Cache Compatible)
 val generateJvmBuildConfig = tasks.register("generateJvmBuildConfig") {
@@ -103,6 +103,8 @@ kotlin {
 
             implementation(libs.androidx.datastore)
             implementation(libs.androidx.datastore.preferences)
+
+            implementation(libs.liquid)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
