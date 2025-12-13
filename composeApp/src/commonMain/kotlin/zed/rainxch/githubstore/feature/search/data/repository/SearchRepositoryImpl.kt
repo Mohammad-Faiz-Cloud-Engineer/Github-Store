@@ -21,6 +21,7 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withTimeoutOrNull
+import zed.rainxch.githubstore.app.AppStateManager
 import zed.rainxch.githubstore.core.domain.model.GithubRepoSummary
 import zed.rainxch.githubstore.core.data.mappers.toSummary
 import zed.rainxch.githubstore.core.data.model.GithubRepoNetworkModel
@@ -30,9 +31,12 @@ import zed.rainxch.githubstore.feature.search.data.repository.dto.GithubReleaseN
 import zed.rainxch.githubstore.feature.search.data.repository.utils.LruCache
 import zed.rainxch.githubstore.feature.search.domain.model.SearchPlatformType
 import zed.rainxch.githubstore.feature.search.domain.repository.SearchRepository
+import zed.rainxch.githubstore.network.RateLimitException
+import zed.rainxch.githubstore.network.safeApiCall
 
 class SearchRepositoryImpl(
     private val githubNetworkClient: HttpClient,
+    private val appStateManager: AppStateManager
 ) : SearchRepository {
     private val releaseCheckCache = LruCache<String, GithubRepoSummary>(maxSize = 500)
     private val cacheMutex = Mutex()
@@ -46,12 +50,23 @@ class SearchRepositoryImpl(
         val searchQuery = buildSearchQuery(query, searchPlatformType)
 
         try {
-            val response: GithubRepoSearchResponse =
-                githubNetworkClient.get("/search/repositories") {
+            val responseResult = githubNetworkClient.safeApiCall<GithubRepoSearchResponse>(
+                rateLimitHandler = appStateManager.rateLimitHandler,
+                autoRetryOnRateLimit = false
+            ) {
+                get("/search/repositories") {
                     parameter("q", searchQuery)
                     parameter("per_page", perPage)
                     parameter("page", page)
-                }.body()
+                }
+            }
+
+            val response = responseResult.getOrElse { error ->
+                if (error is RateLimitException) {
+                    appStateManager.updateRateLimit(error.rateLimitInfo)
+                }
+                throw error
+            }
 
             val total = response.totalCount
             val baseHasMore = (page * perPage) < total && response.items.isNotEmpty()
@@ -279,12 +294,23 @@ class SearchRepositoryImpl(
             var pagesFetched = 0
             while (verified.size < targetCount && hasMore && pagesFetched < maxBackfillPages) {
                 val nextPage = lastFetchedPage + 1
-                val resp: GithubRepoSearchResponse =
-                    githubNetworkClient.get("/search/repositories") {
+                val respResult = githubNetworkClient.safeApiCall<GithubRepoSearchResponse>(
+                    rateLimitHandler = appStateManager.rateLimitHandler,
+                    autoRetryOnRateLimit = false
+                ) {
+                    get("/search/repositories") {
                         parameter("q", searchQuery)
                         parameter("per_page", perPage)
                         parameter("page", nextPage)
-                    }.body()
+                    }
+                }
+
+                val resp = respResult.getOrElse { error ->
+                    if (error is RateLimitException) {
+                        appStateManager.updateRateLimit(error.rateLimitInfo)
+                    }
+                    throw error
+                }
 
                 if (resp.items.isEmpty()) {
                     hasMore = false
@@ -337,12 +363,23 @@ class SearchRepositoryImpl(
         }
 
         return try {
-            val allReleases: List<GithubReleaseNetworkModel> = githubNetworkClient
-                .get("/repos/${repo.owner.login}/${repo.name}/releases") {
+            val releasesResult = githubNetworkClient.safeApiCall<List<GithubReleaseNetworkModel>>(
+                rateLimitHandler = appStateManager.rateLimitHandler,
+                autoRetryOnRateLimit = false
+            ) {
+                get("/repos/${repo.owner.login}/${repo.name}/releases") {
                     header("Accept", "application/vnd.github.v3+json")
                     parameter("per_page", 10)
                 }
-                .body()
+            }
+
+            releasesResult.onFailure { error ->
+                if (error is RateLimitException) {
+                    appStateManager.updateRateLimit(error.rateLimitInfo)
+                }
+            }
+
+            val allReleases = releasesResult.getOrNull() ?: return null
 
             val stableRelease = allReleases.firstOrNull {
                 it.draft != true && it.prerelease != true

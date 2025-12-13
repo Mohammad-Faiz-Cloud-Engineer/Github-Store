@@ -22,6 +22,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import zed.rainxch.githubstore.app.AppStateManager
 import zed.rainxch.githubstore.core.domain.model.GithubRepoSummary
 import zed.rainxch.githubstore.core.data.mappers.toSummary
 import zed.rainxch.githubstore.core.data.model.GithubRepoNetworkModel
@@ -30,13 +31,16 @@ import zed.rainxch.githubstore.core.domain.Platform
 import zed.rainxch.githubstore.core.domain.model.PlatformType
 import zed.rainxch.githubstore.feature.home.domain.repository.HomeRepository
 import zed.rainxch.githubstore.feature.home.domain.model.PaginatedRepos
+import zed.rainxch.githubstore.network.RateLimitException
+import zed.rainxch.githubstore.network.safeApiCall
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 
 class HomeRepositoryImpl(
     private val githubNetworkClient: HttpClient,
-    private val platform: Platform
+    private val platform: Platform,
+    private val appStateManager: AppStateManager
 ) : HomeRepository {
 
     override fun getTrendingRepositories(page: Int): Flow<PaginatedRepos> =
@@ -92,14 +96,26 @@ class HomeRepositoryImpl(
             currentCoroutineContext().ensureActive()
 
             try {
-                val response: GithubRepoSearchResponse =
-                    githubNetworkClient.get("/search/repositories") {
+                val response = githubNetworkClient.safeApiCall<GithubRepoSearchResponse>(
+                    rateLimitHandler = appStateManager.rateLimitHandler,
+                    autoRetryOnRateLimit = false
+                ) {
+                    get("/search/repositories") {
                         parameter("q", query)
                         parameter("sort", sort)
                         parameter("order", order)
                         parameter("per_page", perPage)
                         parameter("page", currentApiPage)
-                    }.body()
+                    }
+                }.getOrElse { error ->
+                    Logger.e { "Search request failed: ${error.message}" }
+
+                    if (error is RateLimitException) {
+                        appStateManager.updateRateLimit(error.rateLimitInfo)
+                    }
+
+                    throw error
+                }
 
                 Logger.d { "API Page $currentApiPage: Got ${response.items.size} repos" }
 
@@ -167,8 +183,12 @@ class HomeRepositoryImpl(
                 currentApiPage++
                 pagesFetchedCount++
 
+            } catch (e: RateLimitException) {
+                Logger.e { "Rate limited during search" }
+                break
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                if (e is CancellationException) throw e
                 Logger.e { "Search failed: ${e.message}" }
                 e.printStackTrace()
                 break
@@ -236,25 +256,26 @@ class HomeRepositoryImpl(
 
     private suspend fun checkRepoHasInstallers(repo: GithubRepoNetworkModel): GithubRepoSummary? {
         return try {
-            // Get recent releases to find the latest stable one
-            val allReleases: List<GithubReleaseNetworkModel> = githubNetworkClient
-                .get("/repos/${repo.owner.login}/${repo.name}/releases") {
+            val releasesResult = githubNetworkClient.safeApiCall<List<GithubReleaseNetworkModel>>(
+                rateLimitHandler = appStateManager.rateLimitHandler,
+                autoRetryOnRateLimit = false
+            ) {
+                get("/repos/${repo.owner.login}/${repo.name}/releases") {
                     header("Accept", "application/vnd.github.v3+json")
-                    parameter("per_page", 10) // Check up to 10 recent releases
+                    parameter("per_page", 10)
                 }
-                .body()
+            }
 
-            // Find the latest STABLE release (not draft, not prerelease)
+            val allReleases = releasesResult.getOrNull() ?: return null
+
             val stableRelease = allReleases.firstOrNull {
                 it.draft != true && it.prerelease != true
             }
 
-            // If no stable release exists, reject this repo
             if (stableRelease == null || stableRelease.assets.isEmpty()) {
                 return null
             }
 
-            // Check if the stable release has the installers we need
             val relevantAssets = stableRelease.assets.filter { asset ->
                 val name = asset.name.lowercase()
                 when (platform.type) {

@@ -29,7 +29,8 @@ class AuthenticationViewModel(
     observeAccessToken: ObserveAccessTokenUseCase,
     private val browserHelper: BrowserHelper,
     private val clipboardHelper: ClipboardHelper,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+
 ) : ViewModel() {
 
     private var hasLoadedInitialData = false

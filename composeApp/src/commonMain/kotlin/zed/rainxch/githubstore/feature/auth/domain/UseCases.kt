@@ -20,3 +20,8 @@ class ObserveAccessTokenUseCase(private val repo: AuthRepository) {
 class LogoutUseCase(private val repo: AuthRepository) {
     suspend operator fun invoke() = repo.logout()
 }
+
+class IsAuthenticatedUseCase(private val repo: AuthRepository) {
+    suspend operator fun invoke(): Boolean = repo.isAuthenticated()
+    fun observe(): Flow<Boolean> = repo.isAuthenticatedFlow
+}

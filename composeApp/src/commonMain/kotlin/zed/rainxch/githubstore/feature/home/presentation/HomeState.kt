@@ -8,7 +8,6 @@ data class HomeState(
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val errorMessage: String? = null,
-    val needsAuth: Boolean = false,
     val hasMorePages: Boolean = true,
     val currentCategory: HomeCategory = HomeCategory.POPULAR
 )

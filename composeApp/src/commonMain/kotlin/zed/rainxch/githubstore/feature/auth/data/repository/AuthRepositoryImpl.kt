@@ -22,6 +22,12 @@ class AuthRepositoryImpl(
     override val accessTokenFlow: Flow<String?>
         get() = tokenDataSource.tokenFlow.map { it?.accessToken }
 
+    override val isAuthenticatedFlow: Flow<Boolean>
+        get() = tokenDataSource.tokenFlow.map { it != null }
+
+    override suspend fun isAuthenticated(): Boolean =
+        tokenDataSource.current() != null
+
     override suspend fun startDeviceFlow(scope: String): DeviceStart =
         withContext(Dispatchers.Default) {
             val clientId = getGithubClientId()
@@ -178,6 +184,6 @@ class AuthRepositoryImpl(
     }
 
     companion object {
-        const val DEFAULT_SCOPE = "read:user repo"
+        const val DEFAULT_SCOPE = "repo"
     }
 }

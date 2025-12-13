@@ -11,13 +11,11 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import zed.rainxch.githubstore.core.data.data_source.TokenDataSource
 import zed.rainxch.githubstore.feature.home.domain.repository.HomeRepository
 import zed.rainxch.githubstore.feature.home.presentation.model.HomeCategory
 
 class HomeViewModel(
     private val homeRepository: HomeRepository,
-    private val tokenDataSource: TokenDataSource
 ) : ViewModel() {
 
     private var hasLoadedInitialData = false
@@ -55,25 +53,12 @@ class HomeViewModel(
         Logger.d { "Loading repos: category=$targetCategory, page=$nextPageIndex, isInitial=$isInitial" }
 
         currentJob = viewModelScope.launch {
-            val token = tokenDataSource.current()
-
-            if (token == null) {
-                _state.update {
-                    it.copy(
-                        needsAuth = true,
-                        isLoading = false,
-                        isLoadingMore = false
-                    )
-                }
-                return@launch
-            }
 
             _state.update {
                 it.copy(
                     isLoading = isInitial,
                     isLoadingMore = !isInitial,
                     errorMessage = null,
-                    needsAuth = false,
                     currentCategory = targetCategory,
                     repos = if (isInitial) emptyList() else it.repos
                 )

@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.kotest)
 }
 
 val appVersionName = "1.2.1"
@@ -116,6 +117,11 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotest.framework.engine)
+            implementation(libs.kotest.assertions.core)
+        }
+        jvmTest.dependencies {
+            implementation(libs.kotest.runner.junit5)
         }
         jvmMain {
             kotlin.srcDir(layout.buildDirectory.dir("generated/buildconfig/jvm"))
@@ -180,6 +186,10 @@ android {
     buildFeatures {
         buildConfig = true
     }
+}
+
+tasks.named<Test>("jvmTest") {
+    useJUnitPlatform()
 }
 
 dependencies {

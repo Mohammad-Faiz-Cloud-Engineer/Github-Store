@@ -6,10 +6,12 @@ import zed.rainxch.githubstore.core.domain.model.DeviceTokenSuccess
 
 interface AuthRepository {
     val accessTokenFlow: Flow<String?>
+    val isAuthenticatedFlow: Flow<Boolean>
 
     suspend fun startDeviceFlow(scope: String): DeviceStart
 
     suspend fun awaitDeviceToken(start: DeviceStart): DeviceTokenSuccess
 
     suspend fun logout()
+    suspend fun isAuthenticated(): Boolean
 }

@@ -7,6 +7,7 @@ import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import zed.rainxch.githubstore.MainViewModel
+import zed.rainxch.githubstore.app.AppStateManager
 import zed.rainxch.githubstore.core.data.data_source.DefaultTokenDataSource
 import zed.rainxch.githubstore.core.data.data_source.TokenDataSource
 import zed.rainxch.githubstore.core.data.repository.ThemesRepositoryImpl
@@ -29,6 +30,7 @@ import zed.rainxch.githubstore.feature.search.data.repository.SearchRepositoryIm
 import zed.rainxch.githubstore.feature.search.domain.repository.SearchRepository
 import zed.rainxch.githubstore.feature.search.presentation.SearchViewModel
 import zed.rainxch.githubstore.feature.settings.presentation.SettingsViewModel
+import zed.rainxch.githubstore.network.RateLimitHandler
 
 val coreModule: Module = module {
     single<TokenDataSource> {
@@ -37,9 +39,19 @@ val coreModule: Module = module {
         )
     }
 
+    single { RateLimitHandler() }
+
+    single {
+        AppStateManager(
+            rateLimitHandler = get(),
+            tokenDataSource = get()
+        )
+    }
+
     single {
         buildAuthedGitHubHttpClient(
-            tokenDataSource = get()
+            tokenDataSource = get(),
+            rateLimitHandler = get()
         )
     }
 
@@ -52,7 +64,8 @@ val coreModule: Module = module {
     viewModel {
         MainViewModel(
             tokenDataSource = get(),
-            themesRepository = get()
+            themesRepository = get(),
+            appStateManager = get()
         )
     }
 }
@@ -64,6 +77,7 @@ val authModule: Module = module {
     factory { AwaitDeviceTokenUseCase(get()) }
     factory { ObserveAccessTokenUseCase(get()) }
     factory { LogoutUseCase(get()) }
+    factory { IsAuthenticatedUseCase(get()) }
 
     single<CoroutineScope> {
         CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -86,14 +100,14 @@ val homeModule: Module = module {
     single<HomeRepository> {
         HomeRepositoryImpl(
             githubNetworkClient = get(),
-            platform = getPlatform()
+            platform = getPlatform(),
+            appStateManager = get()
         )
     }
 
     viewModel {
         HomeViewModel(
             homeRepository = get(),
-            tokenDataSource = get()
         )
     }
 }
@@ -102,6 +116,7 @@ val searchModule: Module = module {
     single<SearchRepository> {
         SearchRepositoryImpl(
             githubNetworkClient = get(),
+            appStateManager = get()
         )
     }
 
@@ -114,7 +129,10 @@ val searchModule: Module = module {
 
 val detailsModule: Module = module {
     single<DetailsRepository> {
-        DetailsRepositoryImpl(github = get())
+        DetailsRepositoryImpl(
+            github = get(),
+            appStateManager = get()
+        )
     }
 
     viewModel { params ->

@@ -322,19 +322,6 @@ fun HomeScreen(
                         }
                     }
                 }
-
-                if (state.needsAuth) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text("Authentication required")
-                        }
-                    }
-                }
             }
         }
     }

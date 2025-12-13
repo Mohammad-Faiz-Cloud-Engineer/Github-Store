@@ -18,7 +18,7 @@ kermit = "2.0.8"
 kotlin = "2.2.21"
 kotlinx-coroutines = "1.10.2"
 kotlinxDatetime = "0.7.1"
-ktor = "3.3.2"
+ktor = "3.3.3"
 kotlinx-serialization = "1.9.0"
 androidx-security-crypto = "1.1.0"
 koin = "4.1.1"
@@ -27,6 +27,8 @@ liquid = "1.1.0"
 multiplatformMarkdownRenderer = "0.38.1"
 navigationCompose = "2.9.1"
 datastore = "1.2.0"
+kotest = "6.0.7"
+ksp = "2.3.2"
 
 [libraries]
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
@@ -77,6 +79,12 @@ multiplatform-markdown-renderer-coil3 = { module = "com.mikepenz:multiplatform-m
 androidx-datastore = { group = "androidx.datastore", name = "datastore", version.ref = "datastore" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
+# Testing (Kotest)
+kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+
+
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
@@ -85,3 +93,4 @@ composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMul
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotest = { id = "io.kotest", version.ref = "kotest" }

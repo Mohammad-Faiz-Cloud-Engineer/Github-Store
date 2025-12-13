@@ -9,12 +9,14 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import zed.rainxch.githubstore.app.AppStateManager
 import zed.rainxch.githubstore.core.data.data_source.TokenDataSource
 import zed.rainxch.githubstore.core.domain.repository.ThemesRepository
 
 class MainViewModel(
     private val tokenDataSource: TokenDataSource,
-    private val themesRepository: ThemesRepository
+    private val themesRepository: ThemesRepository,
+    private val appStateManager: AppStateManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MainState())
@@ -29,17 +31,16 @@ class MainViewModel(
                     isLoggedIn = initialToken != null
                 )
             }
-            Logger.d("MainViewmodel") { "Initial token loaded: ${initialToken != null}" }
+            Logger.d("MainViewModel") { "Initial token loaded: ${initialToken != null}" }
         }
 
         viewModelScope.launch {
             tokenDataSource
                 .tokenFlow
-                .drop(1) // Skip initial emission (already handled above)
+                .drop(1)
                 .distinctUntilChanged()
                 .collect { authInfo ->
                     _state.update { it.copy(isLoggedIn = authInfo != null) }
-                    Logger.d("MainViewmodel") { "Token updated: ${authInfo != null}" }
                 }
         }
 
@@ -51,6 +52,25 @@ class MainViewModel(
                         it.copy(currentColorTheme = theme)
                     }
                 }
+        }
+
+        viewModelScope.launch {
+            appStateManager.appState.collect { appState ->
+                _state.update {
+                    it.copy(
+                        rateLimitInfo = appState.rateLimitInfo,
+                        showRateLimitDialog = appState.showRateLimitDialog
+                    )
+                }
+            }
+        }
+    }
+
+    fun onAction(action : MainAction) {
+        when (action) {
+            MainAction.DismissRateLimitDialog -> {
+                appStateManager.dismissRateLimitDialog()
+            }
         }
     }
 }
