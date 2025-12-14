@@ -2,9 +2,7 @@ package zed.rainxch.githubstore.app.navigation
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
@@ -13,23 +11,15 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSerializable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberDecoratedNavEntries
-import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.compose.serialization.serializers.SnapshotStateListSerializer
-import androidx.savedstate.serialization.SavedStateConfiguration
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import zed.rainxch.githubstore.MainAction
@@ -43,49 +33,8 @@ import zed.rainxch.githubstore.feature.settings.presentation.SettingsRoot
 
 @Composable
 fun AppNavigation(
-    onAuthenticationChecked: () -> Unit = { },
-    state: MainState,
-    onAction: (MainAction) -> Unit
+    navBackStack: SnapshotStateList<GithubStoreGraph>
 ) {
-    val navBackStack = rememberSerializable(
-        serializer = SnapshotStateListSerializer<GithubStoreGraph>()
-    ) {
-        mutableStateListOf(GithubStoreGraph.HomeScreen)
-    }
-
-    LaunchedEffect(state.isCheckingAuth) {
-        if (!state.isCheckingAuth) {
-            onAuthenticationChecked()
-        }
-    }
-
-    if (state.isCheckingAuth) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-
-        return
-    }
-
-
-    if (state.showRateLimitDialog && state.rateLimitInfo != null) {
-        RateLimitDialog(
-            rateLimitInfo = state.rateLimitInfo,
-            isAuthenticated = state.isLoggedIn,
-            onDismiss = {
-                onAction(MainAction.DismissRateLimitDialog)
-            },
-            onSignIn = {
-                onAction(MainAction.DismissRateLimitDialog)
-
-                navBackStack.clear()
-                navBackStack.add(GithubStoreGraph.AuthenticationScreen)
-            }
-        )
-    }
 
     NavDisplay(
         backStack = navBackStack,
