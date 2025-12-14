@@ -3,7 +3,7 @@ package zed.rainxch.githubstore.feature.auth.presentation
 import zed.rainxch.githubstore.core.domain.model.DeviceStart
 
 sealed interface AuthenticationAction {
-    data class StartLogin(val scope: String) : AuthenticationAction
+    data object StartLogin : AuthenticationAction
     data class CopyCode(val start: DeviceStart) : AuthenticationAction
     data class OpenGitHub(val start: DeviceStart) : AuthenticationAction
     data object Logout : AuthenticationAction

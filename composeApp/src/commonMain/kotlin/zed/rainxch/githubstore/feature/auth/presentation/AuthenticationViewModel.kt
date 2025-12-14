@@ -70,7 +70,7 @@ class AuthenticationViewModel(
 
     fun onAction(action: AuthenticationAction) {
         when (action) {
-            is AuthenticationAction.StartLogin -> startLogin(action.scope)
+            is AuthenticationAction.StartLogin -> startLogin()
             is AuthenticationAction.CopyCode -> copyCode(action.start)
             is AuthenticationAction.OpenGitHub -> openGitHub(action.start)
             is AuthenticationAction.Logout -> logout()
@@ -86,10 +86,10 @@ class AuthenticationViewModel(
         }
     }
 
-    private fun startLogin(scopeText: String) {
+    private fun startLogin() {
         scope.launch {
             try {
-                val start = startDeviceFlow(scopeText)
+                val start = startDeviceFlow("repo")
                 _state.update {
                     it.copy(
                         loginState = AuthLoginState.DevicePrompt(start),

@@ -135,7 +135,7 @@ fun AuthenticationScreen(
                     GithubStoreButton(
                         text = "Try again",
                         onClick = {
-                            onAction(AuthenticationAction.StartLogin("read:user repo"))
+                            onAction(AuthenticationAction.StartLogin)
                         },
                         modifier = Modifier.fillMaxWidth(.7f)
                     )
@@ -281,7 +281,7 @@ fun StateLoggedOut(
         GithubStoreButton(
             text = "Sign in with Github",
             onClick = {
-                onAction(AuthenticationAction.StartLogin("read:user repo"))
+                onAction(AuthenticationAction.StartLogin)
             },
             icon = {
                 Icon(
