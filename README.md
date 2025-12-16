@@ -47,9 +47,14 @@ clean, app‑store style experience:
 
 ## 🔃 Download
 
-Go to the [Releases](https://github.com/rainxchzed/Github-Store/releases) to download the latest
-Installer.
+<a href="https://github.com/rainxchzed/Github-Store/releases">
+   <image src="https://i.ibb.co/q0mdc4Z/get-it-on-github.png" height="80"/>
+ </a>
 
+<a href="https://f-droid.org/en/packages/zed.rainxch.githubstore/">
+   <image src="https://f-droid.org/badge/get-it-on.png" height="80"/>
+ </a
+   
 > [!IMPORTANT]
 > On macOS, you may see a warning that Apple cannot verify Github Store is free of malware. This
 > happens because the app is distributed outside the App Store and is not notarized yet. You can allow
