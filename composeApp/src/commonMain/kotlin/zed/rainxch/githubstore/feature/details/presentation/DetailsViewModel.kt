@@ -38,6 +38,7 @@ class DetailsViewModel(
 
     private var hasLoadedInitialData = false
     private var currentDownloadJob: Job? = null
+    private var currentAssetName: String? = null
 
     private val _state = MutableStateFlow(DetailsState())
     val state = _state
@@ -187,9 +188,31 @@ class DetailsViewModel(
             DetailsAction.CancelCurrentDownload -> {
                 currentDownloadJob?.cancel()
                 currentDownloadJob = null
+
+                val assetName = currentAssetName
+                if (assetName != null) {
+                    viewModelScope.launch {
+                        try {
+                            val deleted = downloader.cancelDownload(assetName)
+                            Logger.d { "Cancel download - file deleted: $deleted" }
+
+                            appendLog(
+                                assetName = assetName,
+                                size = 0L,
+                                tag = _state.value.latestRelease?.tagName ?: "",
+                                result = "Cancelled"
+                            )
+                        } catch (t: Throwable) {
+                            Logger.e { "Failed to cancel download: ${t.message}" }
+                        }
+                    }
+                }
+
+                currentAssetName = null
                 _state.value = _state.value.copy(
                     isDownloading = false,
-                    downloadProgressPercent = null
+                    downloadProgressPercent = null,
+                    downloadStage = DownloadStage.IDLE
                 )
             }
 
@@ -232,6 +255,8 @@ class DetailsViewModel(
                         val release = _state.value.latestRelease
 
                         if (primary != null && release != null) {
+                            currentAssetName = primary.name
+
                             appendLog(
                                 primary.name,
                                 primary.size,
@@ -245,6 +270,7 @@ class DetailsViewModel(
                                 downloadProgressPercent = null,
                                 downloadStage = DownloadStage.DOWNLOADING
                             )
+
                             downloader.download(primary.downloadUrl, primary.name).collect { p ->
                                 _state.value =
                                     _state.value.copy(downloadProgressPercent = p.percent)
@@ -260,6 +286,8 @@ class DetailsViewModel(
                             appendLog(primary.name, primary.size, release.tagName, "Downloaded")
 
                             _state.value = _state.value.copy(downloadStage = DownloadStage.IDLE)
+                            currentAssetName = null
+
                             installer.openInAppManager(
                                 filePath = filePath,
                                 onOpenInstaller = {
@@ -284,6 +312,8 @@ class DetailsViewModel(
                             downloadStage = DownloadStage.IDLE,
                             installError = t.message
                         )
+                        currentAssetName = null
+
                         _state.value.primaryAsset?.let { asset ->
                             _state.value.latestRelease?.let { release ->
                                 appendLog(
@@ -324,6 +354,8 @@ class DetailsViewModel(
         currentDownloadJob?.cancel()
         currentDownloadJob = viewModelScope.launch {
             try {
+                currentAssetName = assetName
+
                 appendLog(assetName, sizeBytes, releaseTag, "DownloadStarted")
                 _state.value = _state.value.copy(
                     downloadError = null,
@@ -360,6 +392,7 @@ class DetailsViewModel(
                 installer.install(filePath, ext)
 
                 _state.value = _state.value.copy(downloadStage = DownloadStage.IDLE)
+                currentAssetName = null
                 appendLog(assetName, sizeBytes, releaseTag, "Installed")
 
             } catch (t: Throwable) {
@@ -368,6 +401,7 @@ class DetailsViewModel(
                     downloadStage = DownloadStage.IDLE,
                     installError = t.message
                 )
+                currentAssetName = null
                 appendLog(assetName, sizeBytes, releaseTag, "Error: ${t.message}")
             }
         }
@@ -382,6 +416,8 @@ class DetailsViewModel(
         currentDownloadJob?.cancel()
         currentDownloadJob = viewModelScope.launch {
             try {
+                currentAssetName = assetName
+
                 appendLog(assetName, sizeBytes, releaseTag, "DownloadStarted")
                 _state.value = _state.value.copy(
                     isDownloading = true,
@@ -395,6 +431,7 @@ class DetailsViewModel(
                 }
 
                 _state.value = _state.value.copy(isDownloading = false)
+                currentAssetName = null
                 appendLog(assetName, sizeBytes, releaseTag, "Downloaded")
 
             } catch (t: Throwable) {
@@ -402,6 +439,7 @@ class DetailsViewModel(
                     isDownloading = false,
                     downloadError = t.message
                 )
+                currentAssetName = null
                 appendLog(assetName, sizeBytes, releaseTag, "Error: ${t.message}")
             }
         }
@@ -438,6 +476,12 @@ class DetailsViewModel(
     override fun onCleared() {
         super.onCleared()
         currentDownloadJob?.cancel()
+
+        currentAssetName?.let { assetName ->
+            viewModelScope.launch {
+                downloader.cancelDownload(assetName)
+            }
+        }
     }
 
     private companion object {

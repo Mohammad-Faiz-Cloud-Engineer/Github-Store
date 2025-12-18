@@ -15,6 +15,7 @@ import java.util.UUID
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOn
 import zed.rainxch.githubstore.feature.details.domain.model.DownloadProgress
+import java.util.concurrent.ConcurrentHashMap
 
 class AndroidDownloader(
     private val context: Context,
@@ -24,6 +25,8 @@ class AndroidDownloader(
     private val downloadManager by lazy {
         context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
     }
+
+    private val activeDownloads = ConcurrentHashMap<String, Long>()
 
     override fun download(url: String, suggestedFileName: String?): Flow<DownloadProgress> = flow {
         val dirPath = files.appDownloadsDir()
@@ -60,85 +63,119 @@ class AndroidDownloader(
         }
 
         val downloadId = downloadManager.enqueue(request)
+        activeDownloads[safeName] = downloadId
 
-        var isDone = false
-        while (!isDone && currentCoroutineContext().isActive) {
-            val cursor = downloadManager.query(DownloadManager.Query().setFilterById(downloadId))
-            if (cursor.moveToFirst()) {
-                val status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
-                val downloaded = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
-                val total = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
-                val percent = if (total > 0) ((downloaded * 100L) / total).toInt() else null
+        try {
+            var isDone = false
+            while (!isDone && currentCoroutineContext().isActive) {
+                val cursor =
+                    downloadManager.query(DownloadManager.Query().setFilterById(downloadId))
+                if (cursor.moveToFirst()) {
+                    val status =
+                        cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
+                    val downloaded =
+                        cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                    val total =
+                        cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                    val percent = if (total > 0) ((downloaded * 100L) / total).toInt() else null
 
-                when (status) {
-                    DownloadManager.STATUS_SUCCESSFUL -> {
-                        val localUriStr = cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI))
-                        val finalPath = Uri.parse(localUriStr).path ?: throw IllegalStateException("Invalid local URI: $localUriStr")
+                    when (status) {
+                        DownloadManager.STATUS_SUCCESSFUL -> {
+                            val localUriStr =
+                                cursor.getString(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_URI))
+                            val finalPath = Uri.parse(localUriStr).path
+                                ?: throw IllegalStateException("Invalid local URI: $localUriStr")
 
-                        val file = File(finalPath)
+                            val file = File(finalPath)
 
-                        var attempts = 0
-                        while ((!file.exists() || file.length() == 0L) && attempts < 6) {  // ~3s max
-                            delay(500L)
-                            attempts++
-                            emit(DownloadProgress(downloaded, total, 100))  // For UI "preparing"
+                            var attempts = 0
+                            while ((!file.exists() || file.length() == 0L) && attempts < 6) {
+                                delay(500L)
+                                attempts++
+                                emit(DownloadProgress(downloaded, total, 100))
+                            }
+                            if (!file.exists() || file.length() == 0L) {
+                                throw IllegalStateException("File not ready after timeout: $finalPath")
+                            }
+
+                            Logger.d { "Download complete: $finalPath" }
+                            emit(DownloadProgress(downloaded, total, 100))
+                            isDone = true
                         }
-                        if (!file.exists() || file.length() == 0L) {
-                            throw IllegalStateException("File not ready after timeout: $finalPath")
+
+                        DownloadManager.STATUS_FAILED -> {
+                            val reason =
+                                cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
+                            Logger.e { "Download failed with reason: $reason" }
+                            throw IllegalStateException("Download failed: $reason")
                         }
 
-                        Logger.d { "Download complete: $finalPath" }
-                        emit(DownloadProgress(downloaded, total, 100))
-                        isDone = true
-                    }
-                    DownloadManager.STATUS_FAILED -> {
-                        val reason = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
-                        Logger.e { "Download failed with reason: $reason" }
-                        throw IllegalStateException("Download failed: $reason")
-                    }
-                    else -> emit(
-                        DownloadProgress(
-                            downloaded,
-                            if (total >= 0) total else null,
-                            percent
+                        else -> emit(
+                            DownloadProgress(
+                                downloaded,
+                                if (total >= 0) total else null,
+                                percent
+                            )
                         )
-                    )
+                    }
+                } else {
+                    throw IllegalStateException("Download ID not found: $downloadId")
                 }
-            } else {
-                throw IllegalStateException("Download ID not found: $downloadId")
-            }
-            cursor.close()
+                cursor.close()
 
-            if (!isDone) delay(500L)
+                if (!isDone) delay(500L)
+            }
+        } finally {
+            activeDownloads.remove(safeName)
         }
     }.flowOn(Dispatchers.IO)
 
-    override suspend fun saveToFile(url: String, suggestedFileName: String?): String = withContext(Dispatchers.IO) {
-        val safeName = (suggestedFileName?.takeIf { it.isNotBlank() }
-            ?: url.substringAfterLast('/').ifBlank { "asset-${UUID.randomUUID()}.apk" })
+    override suspend fun saveToFile(url: String, suggestedFileName: String?): String =
+        withContext(Dispatchers.IO) {
+            val safeName = (suggestedFileName?.takeIf { it.isNotBlank() }
+                ?: url.substringAfterLast('/').ifBlank { "asset-${UUID.randomUUID()}.apk" })
 
-        val file = File(files.appDownloadsDir(), safeName)
+            val file = File(files.appDownloadsDir(), safeName)
 
-        // If file already exists, return its path
-        if (file.exists() && file.length() > 0) {
-            Logger.d { "File already exists: ${file.absolutePath}" }
-            return@withContext file.absolutePath
-        }
+            if (file.exists() && file.length() > 0) {
+                Logger.d { "File already exists: ${file.absolutePath}" }
+                return@withContext file.absolutePath
+            }
 
-        // Otherwise download it
-        Logger.w { "saveToFile called but file doesn't exist, downloading..." }
-        download(url, suggestedFileName).collect { }
+            Logger.w { "saveToFile called but file doesn't exist, downloading..." }
+            download(url, suggestedFileName).collect { }
 
-        file.absolutePath
-    }
-
-    override suspend fun getDownloadedFilePath(fileName: String): String? = withContext(Dispatchers.IO) {
-        val file = File(files.appDownloadsDir(), fileName)
-
-        if (file.exists() && file.length() > 0) {
             file.absolutePath
-        } else {
-            null
         }
-    }
+
+    override suspend fun getDownloadedFilePath(fileName: String): String? =
+        withContext(Dispatchers.IO) {
+            val file = File(files.appDownloadsDir(), fileName)
+
+            if (file.exists() && file.length() > 0) {
+                file.absolutePath
+            } else {
+                null
+            }
+        }
+
+    override suspend fun cancelDownload(fileName: String): Boolean =
+        withContext(Dispatchers.IO) {
+
+            var cancelled = false
+            var deleted = false
+
+            activeDownloads[fileName]?.let { downloadId: Long ->
+                val removedCount = downloadManager.remove(downloadId)
+                cancelled = removedCount > 0
+                activeDownloads.remove(fileName)
+            }
+
+            val file = File(files.appDownloadsDir(), fileName)
+            if (file.exists()) {
+                deleted = file.delete()
+            }
+
+            cancelled || deleted
+        }
 }

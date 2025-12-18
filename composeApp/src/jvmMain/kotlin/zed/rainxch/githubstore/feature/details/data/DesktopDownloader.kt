@@ -48,29 +48,39 @@ class DesktopDownloader(
             val total = response.headers["Content-Length"]?.toLongOrNull()
             val channel = response.bodyAsChannel()
 
-            FileOutputStream(outFile).use { fos ->
-                val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                var downloaded = 0L
+            try {
+                FileOutputStream(outFile).use { fos ->
+                    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                    var downloaded = 0L
 
-                while (isActive) {
-                    val read = channel.readAvailable(buffer, 0, buffer.size)
-                    if (read == -1) break
-                    fos.write(buffer, 0, read)
-                    downloaded += read
+                    while (isActive) {
+                        val read = channel.readAvailable(buffer, 0, buffer.size)
+                        if (read == -1) break
+                        fos.write(buffer, 0, read)
+                        downloaded += read
 
-                    val percent = if (total != null && total > 0) {
-                        ((downloaded * 100L) / total).toInt()
-                    } else null
+                        val percent = if (total != null && total > 0) {
+                            ((downloaded * 100L) / total).toInt()
+                        } else null
 
-                    trySend(DownloadProgress(downloaded, total, percent))
+                        trySend(DownloadProgress(downloaded, total, percent))
+                    }
+                    fos.flush()
                 }
-                fos.flush()
+
+                Logger.d { "Download complete: ${outFile.absolutePath}" }
+
+                trySend(DownloadProgress(total ?: outFile.length(), total, 100))
+            } catch (e: CancellationException) {
+                // Delete partial file on cancellation
+                if (outFile.exists()) {
+                    outFile.delete()
+                    Logger.d { "Deleted partial file after cancellation: ${outFile.absolutePath}" }
+                }
+                throw e
+            } finally {
+                close()
             }
-
-            Logger.d { "Download complete: ${outFile.absolutePath}" }
-
-            trySend(DownloadProgress(total ?: outFile.length(), total, 100))
-            close()
         }
     }
 
@@ -101,6 +111,23 @@ class DesktopDownloader(
             file.absolutePath
         } else {
             null
+        }
+    }
+
+    override suspend fun cancelDownload(fileName: String): Boolean = withContext(Dispatchers.IO) {
+        val dir = File(files.appDownloadsDir())
+        val file = File(dir, fileName)
+
+        if (file.exists()) {
+            val deleted = file.delete()
+            if (deleted) {
+                Logger.d { "Deleted cached file: ${file.absolutePath}" }
+            } else {
+                Logger.w { "Failed to delete cached file: ${file.absolutePath}" }
+            }
+            deleted
+        } else {
+            false
         }
     }
 

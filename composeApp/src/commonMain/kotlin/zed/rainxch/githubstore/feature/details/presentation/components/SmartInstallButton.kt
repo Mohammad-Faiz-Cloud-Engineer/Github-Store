@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import io.github.fletchmckee.liquid.liquefiable
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import zed.rainxch.githubstore.core.domain.model.GithubAsset
+import zed.rainxch.githubstore.core.domain.model.GithubUser
 import zed.rainxch.githubstore.feature.details.presentation.DetailsAction
 import zed.rainxch.githubstore.feature.details.presentation.DetailsState
 import zed.rainxch.githubstore.feature.details.presentation.DownloadStage
@@ -57,6 +59,8 @@ fun SmartInstallButton(
         primaryAsset != null && !isDownloading && !isInstalling
     }
 
+    val isActiveDownload = state.isDownloading || state.downloadStage != DownloadStage.IDLE
+
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -67,7 +71,7 @@ fun SmartInstallButton(
                 .weight(1f)
                 .height(52.dp)
                 .background(
-                    color = if (enabled) {
+                    color = if (enabled || isActiveDownload) {
                         MaterialTheme.colorScheme.primary
                     } else MaterialTheme.colorScheme.surfaceContainer,
                     shape = CircleShape
@@ -75,16 +79,18 @@ fun SmartInstallButton(
                 .clickable(
                     enabled = enabled,
                     onClick = {
-                        onAction(DetailsAction.InstallPrimary)
+                        if (!state.isDownloading && state.downloadStage == DownloadStage.IDLE) {
+                            onAction(DetailsAction.InstallPrimary)
+                        }
                     }
                 )
                 .liquefiable(liquidState),
             colors = CardDefaults.elevatedCardColors(
-                containerColor = if (enabled) {
+                containerColor = if (enabled || isActiveDownload) {
                     MaterialTheme.colorScheme.primary
                 } else MaterialTheme.colorScheme.surfaceContainer
             ),
-            shape = if (state.isObtainiumEnabled) {
+            shape = if (state.isObtainiumEnabled || isActiveDownload) {
                 RoundedCornerShape(
                     topStart = 24.dp,
                     bottomStart = 24.dp,
@@ -97,8 +103,7 @@ fun SmartInstallButton(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                if (state.isDownloading || state.downloadStage != DownloadStage.IDLE) {
-                    // Show status text during download/install
+                if (isActiveDownload) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
@@ -201,7 +206,30 @@ fun SmartInstallButton(
             }
         }
 
-        if (state.isObtainiumEnabled) {
+        if (isActiveDownload) {
+            IconButton(
+                onClick = {
+                    onAction(DetailsAction.CancelCurrentDownload)
+                },
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                ),
+                modifier = Modifier.size(52.dp),
+                shape = RoundedCornerShape(
+                    topStart = 6.dp,
+                    bottomStart = 6.dp,
+                    topEnd = 24.dp,
+                    bottomEnd = 24.dp
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Cancel download",
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+        } else if (state.isObtainiumEnabled) {
             IconButton(
                 onClick = {
                     onAction(DetailsAction.OnToggleInstallDropdown)
@@ -221,7 +249,7 @@ fun SmartInstallButton(
             ) {
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = null,
+                    contentDescription = "Show install options",
                     modifier = Modifier.size(24.dp),
                     tint = if (enabled) {
                         MaterialTheme.colorScheme.onPrimary
@@ -242,5 +270,34 @@ fun SmartInstallButtonPreview() {
         primaryAsset = null,
         onAction = {},
         state = DetailsState()
+    )
+}
+
+@Preview
+@Composable
+fun SmartInstallButtonDownloadingPreview() {
+    SmartInstallButton(
+        isDownloading = true,
+        isInstalling = false,
+        progress = 45,
+        primaryAsset = GithubAsset(
+            id = 1L,
+            name = "app-arm64-v8a.apk",
+            contentType = "application/vnd.android.package-archive",
+            size = 50_000_000L,
+            downloadUrl = "https://example.com/app.apk",
+            uploader = GithubUser(
+                id = 1L,
+                login = "developer",
+                avatarUrl = "",
+                htmlUrl = ""
+            )
+        ),
+        onAction = {},
+        state = DetailsState(
+            isDownloading = true,
+            downloadStage = DownloadStage.DOWNLOADING,
+            downloadProgressPercent = 45
+        )
     )
 }
