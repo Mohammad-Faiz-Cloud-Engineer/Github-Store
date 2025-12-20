@@ -19,8 +19,8 @@
 </p>
 
 <p align="center">
-Github Store is a cross‑platform “play store” for GitHub releases.  
-It discovers repositories that ship real installable binaries and lets you install the latest release in one click.
+Github Store is a cross‑platform “play store” for GitHub releases.
+It discovers repositories that ship real installable binaries and lets you install, track, and update them across platforms from one place.
 </p>
 
 <p align="center">
@@ -38,9 +38,9 @@ It discovers repositories that ship real installable binaries and lets you insta
 Github Store is a Kotlin Multiplatform app (Android + Desktop) that turns GitHub releases into a
 clean, app‑store style experience:
 
-- Only shows repositories that actually provide installable assets (APK, EXE, DMG, etc.).
+- Only shows repositories that actually provide installable assets (APK, EXE, DMG, AppImage, DEB, RPM, etc.).
 - Detects your platform and surfaces the correct installer.
-- Always installs from the **latest published release** and highlights its changelog.
+- Always installs from the latest published release, highlights its changelog, and can notify you when updates are available for installed apps (on Android).
 - Presents a polished details screen with stats, README, and developer info.
 
 ---
@@ -63,7 +63,7 @@ clean, app‑store style experience:
 ## 🚀 Features
 
 - **Smart discovery**
-    - Home sections for “Popular”, “Recently Updated”, and “New” projects.
+    - Home sections for “Trending”, “Recently Updated”, and “New” projects with time‑based filters.
     - Only repos with valid installable assets are shown.
     - Platform‑aware topic scoring so Android/desktop users see relevant apps first.
 
@@ -80,11 +80,18 @@ clean, app‑store style experience:
     - List of installers with platform labels and file sizes.
 
 - **Cross‑platform UX**
-    - Android: opens APK downloads and hands off to the package installer.
-    - Desktop (Windows/macOS/Linux): downloads to a configurable location and opens the file.
+    - Android: opens APK downloads with the package installer, tracks installations in a local database, and shows them in a dedicated Apps screen with update indicators.
+    - Desktop (Windows/macOS/Linux): downloads installers to the user’s Downloads folder and opens them with the default handler; no hidden temp locations.
 
-- **GitHub login & rate‑limit friendly**
-    - Sign‑in with GitHub to use the user’s own 5,000 req/hour quota.
+- **Appearance & theming**
+- Material 3 design with **Material 3 Expressive** components on all platforms.
+- Material You dynamic color support on Android where available.
+- Optional AMOLED black mode for dark theme on OLED devices.
+
+- **Safety & inspection (Android)**
+- Optional GitHub sign‑in via OAuth device flow for higher rate limits with minimal scopes.
+- “Open in AppManager” action to inspect an APK’s permissions and trackers before installing.
+
 
 ---
 
@@ -105,7 +112,7 @@ Your project can appear automatically if it follows these conditions:
         - Android: `.apk`
         - Windows: `.exe`, `.msi`
         - macOS: `.dmg`, `.pkg`
-        - Linux: `.deb`, `.rpm`
+        - Linux: `.deb`, `.rpm`, `.AppImage`
     - Github Store ignores GitHub’s auto‑generated source artifacts (`Source code (zip)` /
       `Source code (tar.gz)`).
 
@@ -144,6 +151,7 @@ automatically—no manual submission required.
         - Picks the best matching asset for the current platform.
         - Streams the download.
         - Delegates to the OS installer (APK installer on Android, default handler on desktop).
+        - On Android, records the installation in a local database and uses package monitoring to keep the installed list in sync.
 
 ---
 
@@ -164,6 +172,7 @@ automatically—no manual submission required.
     - [Ktor 3](https://ktor.io/) (HttpClient with OkHttp on Android, Java on Desktop)
     - [Kotlinx Serialization JSON](https://github.com/Kotlin/kotlinx.serialization).
     - [Kotlinx Datetime](https://github.com/Kotlin/kotlinx-datetime) for time handling
+    - [Room](https://developer.android.com/jetpack/androidx/releases/room) + KSP for the installed apps database on Android.
 
 - **Dependency injection**
     - [Koin 4](https://insert-koin.io/)
@@ -193,8 +202,11 @@ automatically—no manual submission required.
 
 ## ✅ Pros / Why use Github Store?
 
-- **No more hunting through GitHub releases**  
+- **No more hunting through GitHub releases**
   See only repos that actually ship binaries for your platform.
+
+- **Knows what you installed**
+  Tracks apps installed via Github Store (Android) and highlights when new releases are available, so you can update them without hunting through GitHub again.
 
 - **Always the latest release**  
   Installs are guaranteed to come from the latest published release; the changelog you see is
