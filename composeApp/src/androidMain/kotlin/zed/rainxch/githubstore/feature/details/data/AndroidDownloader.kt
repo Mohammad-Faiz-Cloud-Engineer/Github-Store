@@ -38,16 +38,9 @@ class AndroidDownloader(
 
         val tentativeDestination = File(dir, safeName)
 
-        if (tentativeDestination.exists() && tentativeDestination.length() > 0) {
-            Logger.d { "File already exists: ${tentativeDestination.absolutePath}" }
-            emit(
-                DownloadProgress(
-                    tentativeDestination.length(),
-                    tentativeDestination.length(),
-                    100
-                )
-            )
-            return@flow
+        if (tentativeDestination.exists()) {
+            Logger.d { "Deleting existing file before download: ${tentativeDestination.absolutePath}" }
+            tentativeDestination.delete()
         }
 
         Logger.d { "Starting download: $url" }
@@ -137,12 +130,12 @@ class AndroidDownloader(
 
             val file = File(files.appDownloadsDir(), safeName)
 
-            if (file.exists() && file.length() > 0) {
-                Logger.d { "File already exists: ${file.absolutePath}" }
-                return@withContext file.absolutePath
+            if (file.exists()) {
+                Logger.d { "Deleting existing file before download: ${file.absolutePath}" }
+                file.delete()
             }
 
-            Logger.w { "saveToFile called but file doesn't exist, downloading..." }
+            Logger.d { "saveToFile downloading file..." }
             download(url, suggestedFileName).collect { }
 
             file.absolutePath
