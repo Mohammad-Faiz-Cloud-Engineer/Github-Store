@@ -139,8 +139,6 @@ class SearchViewModel(
 
                             currentState.copy(
                                 repositories = allRepos,
-                                isLoading = false,
-                                isLoadingMore = false,
                                 hasMorePages = paginatedRepos.hasMore,
                                 totalCount = allRepos.size,
                                 errorMessage = if (allRepos.isEmpty() && !paginatedRepos.hasMore) {
@@ -149,6 +147,10 @@ class SearchViewModel(
                             )
                         }
                     }
+
+                _state.update {
+                    it.copy(isLoading = false, isLoadingMore = false)
+                }
             } catch (e: CancellationException) {
                 Logger.d { "Search cancelled (expected): ${e.message}" }
             } catch (e: Exception) {
