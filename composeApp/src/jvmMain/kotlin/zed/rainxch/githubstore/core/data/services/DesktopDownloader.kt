@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
-import zed.rainxch.githubstore.core.domain.model.DownloadedFile
 import zed.rainxch.githubstore.feature.details.domain.model.DownloadProgress
 import java.io.File
 import java.io.FileOutputStream
@@ -126,52 +125,6 @@ class DesktopDownloader(
             deleted
         } else {
             false
-        }
-    }
-
-    override suspend fun listDownloadedFiles(): List<DownloadedFile> = withContext(Dispatchers.IO) {
-        val dir = File(files.userDownloadsDir())
-        if (!dir.exists()) return@withContext emptyList()
-
-        dir.listFiles()
-            ?.filter { it.isFile && it.length() > 0 }
-            ?.map { file ->
-                DownloadedFile(
-                    fileName = file.name,
-                    filePath = file.absolutePath,
-                    fileSizeBytes = file.length(),
-                    downloadedAt = file.lastModified()
-                )
-            }
-            ?.sortedByDescending { it.downloadedAt }
-            ?: emptyList()
-    }
-
-    override suspend fun getLatestDownload(): DownloadedFile? = withContext(Dispatchers.IO) {
-        listDownloadedFiles().firstOrNull()
-    }
-
-    override suspend fun getLatestDownloadForAssets(assetNames: List<String>): DownloadedFile? =
-        withContext(Dispatchers.IO) {
-            listDownloadedFiles()
-                .firstOrNull { downloadedFile ->
-                    assetNames.any { assetName ->
-                        downloadedFile.fileName == assetName
-                    }
-                }
-        }
-
-    override suspend fun getFileSize(filePath: String): Long? = withContext(Dispatchers.IO) {
-        try {
-            val file = File(filePath)
-            if (file.exists() && file.isFile) {
-                file.length()
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            Logger.e { "Failed to get file size for $filePath: ${e.message}" }
-            null
         }
     }
 

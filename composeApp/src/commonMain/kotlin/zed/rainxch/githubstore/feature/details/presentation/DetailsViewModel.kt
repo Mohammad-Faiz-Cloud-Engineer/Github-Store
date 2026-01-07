@@ -7,9 +7,6 @@ import githubstore.composeapp.generated.resources.Res
 import githubstore.composeapp.generated.resources.added_to_favourites
 import githubstore.composeapp.generated.resources.installer_saved_downloads
 import githubstore.composeapp.generated.resources.removed_from_favourites
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -516,9 +513,10 @@ class DetailsViewModel(
                     assetName = assetName,
                     size = sizeBytes,
                     tag = releaseTag,
-                    result = if (isUpdate) LogResult.UpdateStarted else LogResult.DownloadStarted
+                    result = if (isUpdate) {
+                        LogResult.UpdateStarted
+                    } else LogResult.DownloadStarted
                 )
-
                 _state.value = _state.value.copy(
                     downloadError = null,
                     installError = null,
@@ -529,55 +527,23 @@ class DetailsViewModel(
                     extOrMime = assetName.substringAfterLast('.', "").lowercase()
                 )
 
-                val existingFilePath = downloader.getDownloadedFilePath(assetName)
-                val validatedFilePath = if (existingFilePath != null) {
-                    val fileSize = downloader.getFileSize(existingFilePath)
-                    if (fileSize == sizeBytes) {
-                        Logger.d { "File already exists with correct size, skipping download: $existingFilePath" }
-                        appendLog(
-                            assetName = assetName,
-                            size = sizeBytes,
-                            tag = releaseTag,
-                            result = LogResult.Downloaded
-                        )
-                        existingFilePath
-                    } else {
-                        Logger.w { "Existing file size mismatch (expected: $sizeBytes, found: $fileSize), re-downloading" }
-                        downloader.cancelDownload(assetName)
-                        null
+                _state.value = _state.value.copy(downloadStage = DownloadStage.DOWNLOADING)
+                downloader.download(downloadUrl, assetName).collect { p ->
+                    _state.value = _state.value.copy(downloadProgressPercent = p.percent)
+                    if (p.percent == 100) {
+                        _state.value = _state.value.copy(downloadStage = DownloadStage.VERIFYING)
                     }
-                } else {
-                    null
                 }
 
-                val filePath = validatedFilePath ?: run {
-                    _state.value = _state.value.copy(downloadStage = DownloadStage.DOWNLOADING)
-                    downloader.download(downloadUrl, assetName).collect { p ->
-                        _state.value = _state.value.copy(downloadProgressPercent = p.percent)
-                        if (p.percent == 100) {
-                            _state.value = _state.value.copy(downloadStage = DownloadStage.VERIFYING)
-                        }
-                    }
+                val filePath = downloader.getDownloadedFilePath(assetName)
+                    ?: throw IllegalStateException("Downloaded file not found")
 
-                    val downloadedPath = downloader.getDownloadedFilePath(assetName)
-                        ?: throw IllegalStateException("Downloaded file not found")
-
-                    val downloadedSize = downloader.getFileSize(downloadedPath)
-                    if (downloadedSize != sizeBytes) {
-                        Logger.e { "Downloaded file size mismatch (expected: $sizeBytes, got: $downloadedSize)" }
-                        downloader.cancelDownload(assetName)
-                        throw IllegalStateException("Downloaded file size mismatch")
-                    }
-
-                    appendLog(
-                        assetName = assetName,
-                        size = sizeBytes,
-                        tag = releaseTag,
-                        result = LogResult.Downloaded
-                    )
-
-                    downloadedPath
-                }
+                appendLog(
+                    assetName = assetName,
+                    size = sizeBytes,
+                    tag = releaseTag,
+                    result = LogResult.Downloaded
+                )
 
                 _state.value = _state.value.copy(downloadStage = DownloadStage.INSTALLING)
                 val ext = assetName.substringAfterLast('.', "").lowercase()
@@ -609,7 +575,9 @@ class DetailsViewModel(
                     assetName = assetName,
                     size = sizeBytes,
                     tag = releaseTag,
-                    result = if (isUpdate) LogResult.Updated else LogResult.Installed
+                    result = if (isUpdate) {
+                        LogResult.Updated
+                    } else LogResult.Installed
                 )
 
             } catch (t: Throwable) {
@@ -817,9 +785,13 @@ class DetailsViewModel(
 
     override fun onCleared() {
         super.onCleared()
-
         currentDownloadJob?.cancel()
-        currentDownloadJob = null
+
+        currentAssetName?.let { assetName ->
+            viewModelScope.launch {
+                downloader.cancelDownload(assetName)
+            }
+        }
     }
 
     private companion object {
