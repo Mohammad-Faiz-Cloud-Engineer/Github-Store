@@ -277,4 +277,52 @@
     <string name="dismiss">বন্ধ করুন</string>
     <string name="sync_starred_failed">স্টার করা রিপোজিটরি সিঙ্ক করতে ব্যর্থ হয়েছে</string>
 
+    <!-- Developer Profile - General -->
+    <string name="failed_to_load_repositories">রিপোজিটরি লোড করতে ব্যর্থ</string>
+    <string name="failed_to_load_profile">প্রোফাইল লোড করতে ব্যর্থ</string>
+
+    <!-- Developer Profile - Stats -->
+    <string name="repositories">রিপোজিটরি</string>
+    <string name="followers">অনুসরণকারী</string>
+    <string name="following">অনুসরণ করছে</string>
+
+    <!-- Developer Profile - Filter & Sort -->
+    <string name="search_repositories">রিপোজিটরি খুঁজুন…</string>
+    <string name="clear_search">অনুসন্ধান মুছুন</string>
+    <string name="filter_all">সব</string>
+    <string name="filter_with_releases">রিলিজ সহ</string>
+    <string name="filter_installed">ইনস্টল করা</string>
+    <string name="filter_favorites">পছন্দের</string>
+    <string name="sort">সাজান</string>
+    <string name="sort_recently_updated">সাম্প্রতিক আপডেট</string>
+    <string name="sort_name">নাম</string>
+
+    <!-- Developer Profile - Repository Count -->
+    <string name="repository_singular">রিপোজিটরি</string>
+    <string name="repositories_plural">রিপোজিটরি</string>
+    <string name="showing_x_of_y_repositories">%2$d টির মধ্যে %1$d টি রিপোজিটরি দেখানো হচ্ছে</string>
+
+    <!-- Developer Profile - Empty States -->
+    <string name="no_repos_with_releases">ইনস্টল করার যোগ্য রিলিজ সহ কোনো রিপোজিটরি নেই</string>
+    <string name="no_installed_repos">কোনো ইনস্টল করা রিপোজিটরি নেই</string>
+    <string name="no_favorite_repos">কোনো পছন্দের রিপোজিটরি নেই</string>
+
+    <!-- Developer Profile - Repository Item -->
+    <string name="updated_x_ago">%1$s আপডেট করা হয়েছে</string>
+    <string name="has_release">রিলিজ আছে</string>
+
+    <!-- Developer Profile - Actions -->
+    <string name="remove_from_favorites">পছন্দের তালিকা থেকে সরান</string>
+    <string name="add_to_favorites">পছন্দের তালিকায় যোগ করুন</string>
+
+    <!-- Developer Profile - Relative Time -->
+    <string name="time_years_ago">%1$d বছর আগে</string>
+    <string name="time_months_ago">%1$d মাস আগে</string>
+    <string name="time_days_ago">%1$d দিন আগে</string>
+    <string name="time_hours_ago">%1$d ঘণ্টা আগে</string>
+    <string name="time_minutes_ago">%1$d মিনিট আগে</string>
+
+    <!-- Developer Profile - Count Formatting -->
+    <string name="count_millions">%1$dM</string>
+    <string name="count_thousands">%1$dk</string>
 </resources>

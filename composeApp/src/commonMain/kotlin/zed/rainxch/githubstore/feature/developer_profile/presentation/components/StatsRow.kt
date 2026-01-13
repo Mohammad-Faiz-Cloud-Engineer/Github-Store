@@ -14,6 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import githubstore.composeapp.generated.resources.Res
+import githubstore.composeapp.generated.resources.followers
+import githubstore.composeapp.generated.resources.following
+import githubstore.composeapp.generated.resources.repositories
+import org.jetbrains.compose.resources.stringResource
 import zed.rainxch.githubstore.feature.developer_profile.domain.model.DeveloperProfile
 
 @Composable
@@ -23,24 +28,25 @@ fun StatsRow(profile: DeveloperProfile) {
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         StatCard(
-            label = "Repositories",
+            label = stringResource(Res.string.repositories),
             value = profile.publicRepos.toString(),
             modifier = Modifier.weight(1f)
         )
 
         StatCard(
-            label = "Followers",
+            label = stringResource(Res.string.followers),
             value = formatCount(profile.followers),
             modifier = Modifier.weight(1f)
         )
 
         StatCard(
-            label = "Following",
+            label = stringResource(Res.string.following),
             value = formatCount(profile.following),
             modifier = Modifier.weight(1f)
         )
     }
 }
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun StatCard(

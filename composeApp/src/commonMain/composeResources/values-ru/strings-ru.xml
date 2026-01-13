@@ -242,4 +242,52 @@
     <string name="dismiss">Закрыть</string>
     <string name="sync_starred_failed">Не удалось синхронизировать избранные репозитории</string>
 
+    <!-- Developer Profile - General -->
+    <string name="failed_to_load_repositories">Не удалось загрузить репозитории</string>
+    <string name="failed_to_load_profile">Не удалось загрузить профиль</string>
+
+    <!-- Developer Profile - Stats -->
+    <string name="repositories">Репозитории</string>
+    <string name="followers">Подписчики</string>
+    <string name="following">Подписки</string>
+
+    <!-- Developer Profile - Filter & Sort -->
+    <string name="search_repositories">Поиск репозиториев…</string>
+    <string name="clear_search">Очистить поиск</string>
+    <string name="filter_all">Все</string>
+    <string name="filter_with_releases">С релизами</string>
+    <string name="filter_installed">Установленные</string>
+    <string name="filter_favorites">Избранные</string>
+    <string name="sort">Сортировка</string>
+    <string name="sort_recently_updated">Недавно обновлённые</string>
+    <string name="sort_name">Название</string>
+
+    <!-- Developer Profile - Repository Count -->
+    <string name="repository_singular">репозиторий</string>
+    <string name="repositories_plural">репозиториев</string>
+    <string name="showing_x_of_y_repositories">Показано %1$d из %2$d репозиториев</string>
+
+    <!-- Developer Profile - Empty States -->
+    <string name="no_repos_with_releases">Нет репозиториев с устанавливаемыми релизами</string>
+    <string name="no_installed_repos">Нет установленных репозиториев</string>
+    <string name="no_favorite_repos">Нет избранных репозиториев</string>
+
+    <!-- Developer Profile - Repository Item -->
+    <string name="updated_x_ago">Обновлено %1$s назад</string>
+    <string name="has_release">Есть релиз</string>
+
+    <!-- Developer Profile - Actions -->
+    <string name="remove_from_favorites">Удалить из избранного</string>
+    <string name="add_to_favorites">Добавить в избранное</string>
+
+    <!-- Developer Profile - Relative Time -->
+    <string name="time_years_ago">%1$dг назад</string>
+    <string name="time_months_ago">%1$dмес назад</string>
+    <string name="time_days_ago">%1$dд назад</string>
+    <string name="time_hours_ago">%1$dч назад</string>
+    <string name="time_minutes_ago">%1$dмин назад</string>
+
+    <!-- Developer Profile - Count Formatting -->
+    <string name="count_millions">%1$dM</string>
+    <string name="count_thousands">%1$dk</string>
 </resources>

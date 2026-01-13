@@ -1,36 +1,24 @@
 package zed.rainxch.githubstore.feature.developer_profile.presentation
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.FolderOff
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.OpenInBrowser
-import androidx.compose.material.icons.filled.Tag
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -47,23 +35,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.skydoves.landscapist.ImageOptions
-import com.skydoves.landscapist.coil3.CoilImage
 import githubstore.composeapp.generated.resources.Res
+import githubstore.composeapp.generated.resources.dismiss
+import githubstore.composeapp.generated.resources.error_generic
+import githubstore.composeapp.generated.resources.error_unknown
+import githubstore.composeapp.generated.resources.navigate_back
+import githubstore.composeapp.generated.resources.no_favorite_repos
+import githubstore.composeapp.generated.resources.no_installed_repos
+import githubstore.composeapp.generated.resources.no_repos_with_releases
+import githubstore.composeapp.generated.resources.no_repositories_found
 import githubstore.composeapp.generated.resources.open_repository
+import githubstore.composeapp.generated.resources.retry
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import zed.rainxch.githubstore.feature.details.presentation.DetailsAction
-import zed.rainxch.githubstore.feature.developer_profile.domain.model.DeveloperProfile
 import zed.rainxch.githubstore.feature.developer_profile.domain.model.RepoFilterType
 import zed.rainxch.githubstore.feature.developer_profile.presentation.components.DeveloperRepoItem
 import zed.rainxch.githubstore.feature.developer_profile.presentation.components.FilterSortControls
@@ -207,17 +196,32 @@ fun DeveloperProfileScreen(
                         .align(Alignment.BottomCenter)
                         .padding(16.dp),
                     action = {
-                        TextButton(onClick = { onAction(DeveloperProfileAction.OnRetry) }) {
-                            Text("Retry")
+                        TextButton(
+                            onClick = {
+                                onAction(DeveloperProfileAction.OnRetry)
+                            }
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.retry)
+                            )
                         }
                     },
                     dismissAction = {
-                        IconButton(onClick = { onAction(DeveloperProfileAction.OnDismissError) }) {
-                            Icon(Icons.Default.Close, contentDescription = "Dismiss")
+                        IconButton(
+                            onClick = {
+                                onAction(DeveloperProfileAction.OnDismissError)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(Res.string.dismiss)
+                            )
                         }
                     }
                 ) {
-                    Text(state.errorMessage)
+                    Text(
+                        text = state.errorMessage
+                    )
                 }
             }
         }
@@ -230,10 +234,10 @@ private fun EmptyReposContent(
     modifier: Modifier = Modifier
 ) {
     val message = when (filter) {
-        RepoFilterType.ALL -> "No repositories found"
-        RepoFilterType.WITH_RELEASES -> "No repositories with installable releases"
-        RepoFilterType.INSTALLED -> "No installed repositories"
-        RepoFilterType.FAVORITES -> "No favorite repositories"
+        RepoFilterType.ALL -> stringResource(Res.string.no_repositories_found)
+        RepoFilterType.WITH_RELEASES -> stringResource(Res.string.no_repos_with_releases)
+        RepoFilterType.INSTALLED -> stringResource(Res.string.no_installed_repos)
+        RepoFilterType.FAVORITES -> stringResource(Res.string.no_favorite_repos)
     }
 
     Column(
@@ -273,7 +277,7 @@ fun DevProfileTopbar(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Navigate back",
+                    contentDescription = stringResource(Res.string.navigate_back),
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -329,7 +333,7 @@ private fun ErrorContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Error",
+            text = stringResource(Res.string.error_generic),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -346,7 +350,9 @@ private fun ErrorContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = onRetry) {
-            Text("Retry")
+            Text(
+                text = stringResource(Res.string.retry)
+            )
         }
     }
 }

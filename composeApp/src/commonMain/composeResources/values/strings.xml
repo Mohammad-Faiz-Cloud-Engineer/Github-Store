@@ -280,4 +280,50 @@
     <string name="developer_profile_title">Developer Profile</string>
     <string name="open_developer_profile">Open developer profile</string>
 
+    <string name="failed_to_load_repositories">Failed to load repositories</string>
+    <string name="failed_to_load_profile">Failed to load profile</string>
+
+    <!-- Developer Profile - Stats -->
+    <string name="repositories">Repositories</string>
+    <string name="followers">Followers</string>
+    <string name="following">Following</string>
+
+    <!-- Developer Profile - Filter & Sort -->
+    <string name="search_repositories">Search repositories…</string>
+    <string name="clear_search">Clear search</string>
+    <string name="filter_all">All</string>
+    <string name="filter_with_releases">With Releases</string>
+    <string name="filter_installed">Installed</string>
+    <string name="filter_favorites">Favorites</string>
+    <string name="sort">Sort</string>
+    <string name="sort_recently_updated">Recently Updated</string>
+    <string name="sort_name">Name</string>
+
+    <!-- Developer Profile - Repository Count -->
+    <string name="repository_singular">repository</string>
+    <string name="repositories_plural">repositories</string>
+    <string name="showing_x_of_y_repositories">Showing %1$d of %2$d repositories</string>
+
+    <!-- Developer Profile - Empty States -->
+    <string name="no_repos_with_releases">No repositories with installable releases</string>
+    <string name="no_installed_repos">No installed repositories</string>
+    <string name="no_favorite_repos">No favorite repositories</string>
+
+    <!-- Developer Profile - Repository Item -->
+    <string name="updated_x_ago">Updated %1$s</string>
+    <string name="has_release">Has Release</string>
+
+    <!-- Developer Profile - Actions -->
+    <string name="remove_from_favorites">Remove from favorites</string>
+    <string name="add_to_favorites">Add to favorites</string>
+
+    <string name="time_years_ago">%1$dy ago</string>
+    <string name="time_months_ago">%1$dmo ago</string>
+    <string name="time_days_ago">%1$dd ago</string>
+    <string name="time_hours_ago">%1$dh ago</string>
+    <string name="time_minutes_ago">%1$dm ago</string>
+
+    <!-- Developer Profile - Count Formatting -->
+    <string name="count_millions">%1$dM</string>
+    <string name="count_thousands">%1$dk</string>
 </resources>

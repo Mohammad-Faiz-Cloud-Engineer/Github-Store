@@ -4,6 +4,9 @@ package zed.rainxch.githubstore.feature.developer_profile.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import githubstore.composeapp.generated.resources.Res
+import githubstore.composeapp.generated.resources.failed_to_load_profile
+import githubstore.composeapp.generated.resources.failed_to_load_repositories
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,6 +15,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
 import zed.rainxch.githubstore.core.data.local.db.entities.FavoriteRepo
 import zed.rainxch.githubstore.core.domain.repository.FavouritesRepository
 import zed.rainxch.githubstore.feature.developer_profile.domain.model.RepoFilterType
@@ -67,7 +71,8 @@ class DeveloperProfileViewModel(
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = error.message ?: "Failed to load profile"
+                            errorMessage = error.message
+                                ?: getString(Res.string.failed_to_load_profile)
                         )
                     }
                     return@launch
@@ -91,7 +96,8 @@ class DeveloperProfileViewModel(
                         it.copy(
                             isLoading = false,
                             isLoadingRepos = false,
-                            errorMessage = error.message ?: "Failed to load repositories"
+                            errorMessage = error.message
+                                ?: getString(Res.string.failed_to_load_repositories)
                         )
                     }
                 }

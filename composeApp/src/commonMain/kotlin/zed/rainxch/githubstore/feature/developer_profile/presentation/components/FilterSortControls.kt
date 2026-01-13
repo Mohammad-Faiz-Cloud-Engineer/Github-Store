@@ -33,6 +33,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import githubstore.composeapp.generated.resources.Res
+import githubstore.composeapp.generated.resources.clear_search
+import githubstore.composeapp.generated.resources.filter_all
+import githubstore.composeapp.generated.resources.filter_favorites
+import githubstore.composeapp.generated.resources.filter_installed
+import githubstore.composeapp.generated.resources.filter_with_releases
+import githubstore.composeapp.generated.resources.repositories
+import githubstore.composeapp.generated.resources.repository_singular
+import githubstore.composeapp.generated.resources.search_repositories
+import githubstore.composeapp.generated.resources.showing_x_of_y_repositories
+import githubstore.composeapp.generated.resources.sort
+import githubstore.composeapp.generated.resources.sort_most_stars
+import githubstore.composeapp.generated.resources.sort_name
+import githubstore.composeapp.generated.resources.sort_recently_updated
+import org.jetbrains.compose.resources.stringResource
 import zed.rainxch.githubstore.feature.developer_profile.domain.model.RepoFilterType
 import zed.rainxch.githubstore.feature.developer_profile.domain.model.RepoSortType
 import zed.rainxch.githubstore.feature.developer_profile.presentation.DeveloperProfileAction
@@ -59,14 +74,14 @@ fun FilterSortControls(
             modifier = Modifier.fillMaxWidth(),
             placeholder = {
                 Text(
-                    text = "Search repositories...",
+                    text = stringResource(Res.string.search_repositories),
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
+                    contentDescription = stringResource(Res.string.search_repositories),
                     modifier = Modifier.size(20.dp)
                 )
             },
@@ -77,7 +92,7 @@ fun FilterSortControls(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Clear search",
+                            contentDescription = stringResource(Res.string.clear_search),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -116,9 +131,20 @@ fun FilterSortControls(
 
         Text(
             text = if (repoCount == totalCount) {
-                "$repoCount ${if (repoCount == 1) "repository" else "repositories"}"
+                "$repoCount ${
+                    stringResource(
+                        if (repoCount == 1) {
+                            Res.string.repository_singular
+                        } else {
+                            Res.string.repositories
+                        }
+                    )
+                }"
             } else {
-                "Showing $repoCount of $totalCount repositories"
+                stringResource(
+                    resource = Res.string.showing_x_of_y_repositories,
+                    repoCount, totalCount
+                )
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -163,7 +189,7 @@ private fun SortMenu(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.Sort,
-                contentDescription = "Sort",
+                contentDescription = stringResource(Res.string.sort),
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -214,18 +240,18 @@ private fun SortMenu(
 @Composable
 private fun RepoFilterType.displayName(): String {
     return when (this) {
-        RepoFilterType.ALL -> "All"
-        RepoFilterType.WITH_RELEASES -> "With Releases"
-        RepoFilterType.INSTALLED -> "Installed"
-        RepoFilterType.FAVORITES -> "Favorites"
+        RepoFilterType.ALL -> stringResource(Res.string.filter_all)
+        RepoFilterType.WITH_RELEASES -> stringResource(Res.string.filter_with_releases)
+        RepoFilterType.INSTALLED -> stringResource(Res.string.filter_installed)
+        RepoFilterType.FAVORITES -> stringResource(Res.string.filter_favorites)
     }
 }
 
 @Composable
 private fun RepoSortType.displayName(): String {
     return when (this) {
-        RepoSortType.UPDATED -> "Recently Updated"
-        RepoSortType.STARS -> "Most Stars"
-        RepoSortType.NAME -> "Name"
+        RepoSortType.UPDATED -> stringResource(Res.string.sort_recently_updated)
+        RepoSortType.STARS -> stringResource(Res.string.sort_most_stars)
+        RepoSortType.NAME -> stringResource(Res.string.sort_name)
     }
 }

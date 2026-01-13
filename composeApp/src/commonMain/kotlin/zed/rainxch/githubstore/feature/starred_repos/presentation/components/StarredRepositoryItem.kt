@@ -69,7 +69,6 @@ fun StarredRepositoryItem(
                         .size(40.dp)
                         .clip(CircleShape),
                     imageOptions = ImageOptions(
-                        contentDescription = "${repository.repoOwner}'s avatar",
                         contentScale = ContentScale.Crop
                     ),
                 )

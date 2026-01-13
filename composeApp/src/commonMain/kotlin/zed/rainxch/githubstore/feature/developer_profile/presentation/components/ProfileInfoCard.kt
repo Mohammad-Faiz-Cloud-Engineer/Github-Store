@@ -1,6 +1,5 @@
 package zed.rainxch.githubstore.feature.developer_profile.presentation.components
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -11,28 +10,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.FolderOff
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,18 +29,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
-import githubstore.composeapp.generated.resources.Res
-import githubstore.composeapp.generated.resources.open_repository
-import org.jetbrains.compose.resources.stringResource
 import zed.rainxch.githubstore.feature.developer_profile.domain.model.DeveloperProfile
-import zed.rainxch.githubstore.feature.developer_profile.domain.model.RepoFilterType
 import zed.rainxch.githubstore.feature.developer_profile.presentation.DeveloperProfileAction
-import zed.rainxch.githubstore.feature.developer_profile.presentation.DeveloperProfileState
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -77,7 +60,6 @@ fun ProfileInfoCard(
                         .size(80.dp)
                         .clip(CircleShape),
                     imageOptions = ImageOptions(
-                        contentDescription = "${profile.login}'s avatar",
                         contentScale = ContentScale.Crop
                     ),
                 )

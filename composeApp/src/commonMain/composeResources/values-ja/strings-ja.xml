@@ -224,4 +224,52 @@
     <string name="dismiss">閉じる</string>
     <string name="sync_starred_failed">スター付きリポジトリの同期に失敗しました</string>
 
+    <!-- Developer Profile - General -->
+    <string name="failed_to_load_repositories">リポジトリの読み込みに失敗しました</string>
+    <string name="failed_to_load_profile">プロフィールの読み込みに失敗しました</string>
+
+    <!-- Developer Profile - Stats -->
+    <string name="repositories">リポジトリ</string>
+    <string name="followers">フォロワー</string>
+    <string name="following">フォロー中</string>
+
+    <!-- Developer Profile - Filter & Sort -->
+    <string name="search_repositories">リポジトリを検索…</string>
+    <string name="clear_search">検索をクリア</string>
+    <string name="filter_all">すべて</string>
+    <string name="filter_with_releases">リリースあり</string>
+    <string name="filter_installed">インストール済み</string>
+    <string name="filter_favorites">お気に入り</string>
+    <string name="sort">並べ替え</string>
+    <string name="sort_recently_updated">最近更新</string>
+    <string name="sort_name">名前</string>
+
+    <!-- Developer Profile - Repository Count -->
+    <string name="repository_singular">リポジトリ</string>
+    <string name="repositories_plural">リポジトリ</string>
+    <string name="showing_x_of_y_repositories">%2$d件中%1$d件のリポジトリを表示</string>
+
+    <!-- Developer Profile - Empty States -->
+    <string name="no_repos_with_releases">インストール可能なリリースを持つリポジトリがありません</string>
+    <string name="no_installed_repos">インストール済みのリポジトリがありません</string>
+    <string name="no_favorite_repos">お気に入りのリポジトリがありません</string>
+
+    <!-- Developer Profile - Repository Item -->
+    <string name="updated_x_ago">%1$s前に更新</string>
+    <string name="has_release">リリースあり</string>
+
+    <!-- Developer Profile - Actions -->
+    <string name="remove_from_favorites">お気に入りから削除</string>
+    <string name="add_to_favorites">お気に入りに追加</string>
+
+    <!-- Developer Profile - Relative Time -->
+    <string name="time_years_ago">%1$d年前</string>
+    <string name="time_months_ago">%1$dヶ月前</string>
+    <string name="time_days_ago">%1$d日前</string>
+    <string name="time_hours_ago">%1$d時間前</string>
+    <string name="time_minutes_ago">%1$d分前</string>
+
+    <!-- Developer Profile - Count Formatting -->
+    <string name="count_millions">%1$dM</string>
+    <string name="count_thousands">%1$dk</string>
 </resources>

@@ -36,13 +36,30 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import githubstore.composeapp.generated.resources.Res
+import githubstore.composeapp.generated.resources.added_to_favourites
+import githubstore.composeapp.generated.resources.count_millions
+import githubstore.composeapp.generated.resources.count_thousands
+import githubstore.composeapp.generated.resources.forks
+import githubstore.composeapp.generated.resources.has_release
+import githubstore.composeapp.generated.resources.installed
+import githubstore.composeapp.generated.resources.issues
+import githubstore.composeapp.generated.resources.just_now
+import githubstore.composeapp.generated.resources.removed_from_favourites
+import githubstore.composeapp.generated.resources.stars
+import githubstore.composeapp.generated.resources.time_days_ago
+import githubstore.composeapp.generated.resources.time_hours_ago
+import githubstore.composeapp.generated.resources.time_minutes_ago
+import githubstore.composeapp.generated.resources.time_months_ago
+import githubstore.composeapp.generated.resources.time_years_ago
+import githubstore.composeapp.generated.resources.updated_on_date
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import zed.rainxch.githubstore.core.presentation.theme.GithubStoreTheme
 import zed.rainxch.githubstore.feature.developer_profile.domain.model.DeveloperRepository
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -76,7 +93,10 @@ fun DeveloperRepoItem(
                     )
 
                     Text(
-                        text = "Updated ${formatRelativeDate(repository.updatedAt)}",
+                        text = stringResource(
+                            resource = Res.string.updated_on_date,
+                            formatRelativeDate(repository.updatedAt)
+                        ).replaceFirstChar { it.uppercase() },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -96,9 +116,9 @@ fun DeveloperRepoItem(
                             Icons.Outlined.FavoriteBorder
                         },
                         contentDescription = if (repository.isFavorite) {
-                            "Remove from favorites"
+                            stringResource(Res.string.removed_from_favourites)
                         } else {
-                            "Add to favorites"
+                            stringResource(Res.string.added_to_favourites)
                         },
                         modifier = Modifier.size(20.dp)
                     )
@@ -129,20 +149,20 @@ fun DeveloperRepoItem(
                 RepoStat(
                     icon = Icons.Default.Star,
                     value = formatCount(repository.stargazersCount),
-                    contentDescription = "${repository.stargazersCount} stars"
+                    contentDescription = "${repository.stargazersCount} ${stringResource(Res.string.stars)}"
                 )
 
                 RepoStat(
                     icon = Icons.AutoMirrored.Filled.CallSplit,
                     value = formatCount(repository.forksCount),
-                    contentDescription = "${repository.forksCount} forks"
+                    contentDescription = "${repository.forksCount} ${stringResource(Res.string.forks)}"
                 )
 
                 if (repository.openIssuesCount > 0) {
                     RepoStat(
                         icon = Icons.Outlined.Warning,
                         value = formatCount(repository.openIssuesCount),
-                        contentDescription = "${repository.openIssuesCount} issues"
+                        contentDescription = "${repository.openIssuesCount} ${stringResource(Res.string.issues)}"
                     )
                 }
 
@@ -164,7 +184,8 @@ fun DeveloperRepoItem(
                 if (repository.hasInstallableAssets) {
                     add(
                         RepoBadge(
-                            text = repository.latestVersion ?: "Has Release",
+                            text = repository.latestVersion
+                                ?: stringResource(Res.string.has_release),
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -173,7 +194,7 @@ fun DeveloperRepoItem(
                 if (repository.isInstalled) {
                     add(
                         RepoBadge(
-                            text = "Installed",
+                            text = stringResource(Res.string.installed),
                             containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                             contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                         )
@@ -239,30 +260,48 @@ private data class RepoBadge(
     val contentColor: Color
 )
 
+@Composable
 private fun formatCount(count: Int): String {
     return when {
-        count >= 1_000_000 -> "${count / 1_000_000}M"
-        count >= 1000 -> "${count / 1000}k"
+        count >= 1_000_000 -> stringResource(Res.string.count_millions, count / 1_000_000)
+        count >= 1000 -> stringResource(Res.string.count_thousands, count / 1000)
         else -> count.toString()
     }
 }
 
+@Composable
 private fun formatRelativeDate(dateString: String): String {
-    return try {
-        val instant = Instant.parse(dateString)
-        val now = Clock.System.now()
-        val duration = now - instant
+    val instant = Instant.parse(dateString)
+    val now = Clock.System.now()
+    val duration = now - instant
 
-        when {
-            duration.inWholeDays > 365 -> "${duration.inWholeDays / 365}y ago"
-            duration.inWholeDays > 30 -> "${duration.inWholeDays / 30}mo ago"
-            duration.inWholeDays > 0 -> "${duration.inWholeDays}d ago"
-            duration.inWholeHours > 0 -> "${duration.inWholeHours}h ago"
-            duration.inWholeMinutes > 0 -> "${duration.inWholeMinutes}m ago"
-            else -> "just now"
-        }
-    } catch (e: Exception) {
-        "recently"
+    return when {
+        duration.inWholeDays > 365 -> stringResource(
+            Res.string.time_years_ago,
+            (duration.inWholeDays / 365).toInt()
+        )
+
+        duration.inWholeDays > 30 -> stringResource(
+            Res.string.time_months_ago,
+            (duration.inWholeDays / 30).toInt()
+        )
+
+        duration.inWholeDays > 0 -> stringResource(
+            Res.string.time_days_ago,
+            duration.inWholeDays.toInt()
+        )
+
+        duration.inWholeHours > 0 -> stringResource(
+            Res.string.time_hours_ago,
+            duration.inWholeHours.toInt()
+        )
+
+        duration.inWholeMinutes > 0 -> stringResource(
+            Res.string.time_minutes_ago,
+            duration.inWholeMinutes.toInt()
+        )
+
+        else -> stringResource(Res.string.just_now)
     }
 }
 
