@@ -27,6 +27,7 @@ import org.koin.core.parameter.parametersOf
 import zed.rainxch.githubstore.feature.apps.presentation.AppsRoot
 import zed.rainxch.githubstore.feature.auth.presentation.AuthenticationRoot
 import zed.rainxch.githubstore.feature.details.presentation.DetailsRoot
+import zed.rainxch.githubstore.feature.developer_profile.presentation.DeveloperProfileRoot
 import zed.rainxch.githubstore.feature.favourites.presentation.FavouritesRoot
 import zed.rainxch.githubstore.feature.home.presentation.HomeRoot
 import zed.rainxch.githubstore.feature.search.presentation.SearchRoot
@@ -68,7 +69,14 @@ fun AppNavigation(
                                         repositoryId = repo.id
                                     )
                                 )
-                            }
+                            },
+                            onNavigateToDeveloperProfile = { username ->
+                                navBackStack.add(
+                                    GithubStoreGraph.DeveloperProfileScreen(
+                                        username = username
+                                    )
+                                )
+                            },
                         )
                     }
 
@@ -83,7 +91,14 @@ fun AppNavigation(
                                         repositoryId = repo.id
                                     )
                                 )
-                            }
+                            },
+                            onNavigateToDeveloperProfile = { username ->
+                                navBackStack.add(
+                                    GithubStoreGraph.DeveloperProfileScreen(
+                                        username = username
+                                    )
+                                )
+                            },
                         )
                     }
 
@@ -99,8 +114,33 @@ fun AppNavigation(
                                     )
                                 )
                             },
+                            onNavigateToDeveloperProfile = { username ->
+                                navBackStack.add(
+                                    GithubStoreGraph.DeveloperProfileScreen(
+                                        username = username
+                                    )
+                                )
+                            },
                             viewModel = koinViewModel {
                                 parametersOf(args.repositoryId)
+                            }
+                        )
+                    }
+
+                    entry<GithubStoreGraph.DeveloperProfileScreen> { args ->
+                        DeveloperProfileRoot(
+                            onNavigateBack = {
+                                navBackStack.removeLastOrNull()
+                            },
+                            onNavigateToDetails = { repoId ->
+                                navBackStack.add(
+                                    GithubStoreGraph.DetailsScreen(
+                                        repositoryId = repoId
+                                    )
+                                )
+                            },
+                            viewModel = koinViewModel {
+                                parametersOf(args.username)
                             }
                         )
                     }
@@ -122,6 +162,13 @@ fun AppNavigation(
                             onNavigateToDetails = {
                                 navBackStack.add(GithubStoreGraph.DetailsScreen(it))
                             },
+                            onNavigateToDeveloperProfile = { username ->
+                                navBackStack.add(
+                                    GithubStoreGraph.DeveloperProfileScreen(
+                                        username = username
+                                    )
+                                )
+                            },
                         )
                     }
 
@@ -136,7 +183,14 @@ fun AppNavigation(
                                         repositoryId = repoId
                                     )
                                 )
-                            }
+                            },
+                            onNavigateToDeveloperProfile = { username ->
+                                navBackStack.add(
+                                    GithubStoreGraph.DeveloperProfileScreen(
+                                        username = username
+                                    )
+                                )
+                            },
                         )
                     }
 

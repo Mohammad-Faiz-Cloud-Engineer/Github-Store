@@ -240,6 +240,10 @@ class HomeViewModel(
                 /* Handled in composable */
             }
 
+            is HomeAction.OnRepositoryDeveloperClick -> {
+                /* Handled in composable */
+            }
+
             HomeAction.OnSearchClick -> {
                 /* Handled in composable */
             }

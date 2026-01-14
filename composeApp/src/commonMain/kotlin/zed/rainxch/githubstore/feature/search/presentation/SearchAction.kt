@@ -11,6 +11,7 @@ sealed interface SearchAction {
     data class OnLanguageSelected(val language: ProgrammingLanguage) : SearchAction
     data class OnSortBySelected(val sortBy: SortBy) : SearchAction
     data class OnRepositoryClick(val repository: GithubRepoSummary) : SearchAction
+    data class OnRepositoryDeveloperClick(val username: String) : SearchAction
     data object OnSearchImeClick : SearchAction
     data object OnNavigateBackClick : SearchAction
     data object LoadMore : SearchAction

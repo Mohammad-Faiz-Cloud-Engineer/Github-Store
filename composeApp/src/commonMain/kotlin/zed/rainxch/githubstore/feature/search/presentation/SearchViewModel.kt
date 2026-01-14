@@ -265,8 +265,6 @@ class SearchViewModel(
                 }
             }
 
-            is SearchAction.OnRepositoryClick -> {}
-            SearchAction.OnNavigateBackClick -> {}
 
             is SearchAction.OnSearchChange -> {
                 _state.update { it.copy(query = action.query) }
@@ -328,6 +326,17 @@ class SearchViewModel(
                 currentPage = 1
                 searchDebounceJob?.cancel()
                 performSearch(isInitial = true)
+            }
+            is SearchAction.OnRepositoryClick -> {
+                /* Handled in composable */
+            }
+
+            SearchAction.OnNavigateBackClick -> {
+                /* Handled in composable */
+            }
+
+            is SearchAction.OnRepositoryDeveloperClick -> {
+                /* Handled in composable */
             }
         }
     }

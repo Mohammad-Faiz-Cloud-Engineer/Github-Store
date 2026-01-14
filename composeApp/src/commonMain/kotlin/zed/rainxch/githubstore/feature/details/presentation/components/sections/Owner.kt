@@ -34,7 +34,7 @@ import com.skydoves.landscapist.coil3.CoilImage
 import githubstore.composeapp.generated.resources.Res
 import githubstore.composeapp.generated.resources.author
 import githubstore.composeapp.generated.resources.ic_github
-import githubstore.composeapp.generated.resources.navigate_back
+import githubstore.composeapp.generated.resources.open_developer_profile
 import githubstore.composeapp.generated.resources.profile
 import io.github.fletchmckee.liquid.liquefiable
 import org.jetbrains.compose.resources.painterResource
@@ -69,7 +69,7 @@ fun LazyListScope.author(
             onClick = {
                 author?.login?.let { author ->
                     onAction(
-                        DetailsAction.OpenAuthorInApp(
+                        DetailsAction.OpenDeveloperProfile(
                             author
                         )
                     )
@@ -151,12 +151,10 @@ fun LazyListScope.author(
                     }
                 }
 
-                if (false) { // For now invisible
+                author?.login?.let { author ->
                     IconButton(
                         onClick = {
-                            author?.login?.let { author ->
-                                onAction(DetailsAction.OpenAuthorInApp(author))
-                            }
+                            onAction(DetailsAction.OpenDeveloperProfile(author))
                         },
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -165,7 +163,7 @@ fun LazyListScope.author(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = stringResource(Res.string.navigate_back),
+                            contentDescription = stringResource(Res.string.open_developer_profile),
                             modifier = Modifier.size(24.dp)
                         )
                     }

@@ -273,4 +273,51 @@
     <string name="dismiss">Chiudi</string>
     <string name="sync_starred_failed">Impossibile sincronizzare i repository preferiti</string>
 
+    <string name="developer_profile_title">Profilo dello sviluppatore</string>
+    <string name="open_developer_profile">Apri il profilo dello sviluppatore</string>
+
+    <!-- Developer Profile - General -->
+    <string name="failed_to_load_repositories">Impossibile caricare i repository</string>
+    <string name="failed_to_load_profile">Impossibile caricare il profilo</string>
+
+    <!-- Developer Profile - Stats -->
+    <string name="repositories">Repository</string>
+    <string name="followers">Follower</string>
+    <string name="following">Seguiti</string>
+
+    <!-- Developer Profile - Filter & Sort -->
+    <string name="search_repositories">Cerca repository…</string>
+    <string name="clear_search">Cancella ricerca</string>
+    <string name="filter_all">Tutti</string>
+    <string name="filter_with_releases">Con release</string>
+    <string name="filter_installed">Installati</string>
+    <string name="filter_favorites">Preferiti</string>
+    <string name="sort">Ordina</string>
+    <string name="sort_recently_updated">Aggiornati di recente</string>
+    <string name="sort_name">Nome</string>
+
+    <!-- Developer Profile - Repository Count -->
+    <string name="repository_singular">repository</string>
+    <string name="repositories_plural">repository</string>
+    <string name="showing_x_of_y_repositories">Visualizzazione di %1$d su %2$d repository</string>
+
+    <!-- Developer Profile - Empty States -->
+    <string name="no_repos_with_releases">Nessun repository con release installabili</string>
+    <string name="no_installed_repos">Nessun repository installato</string>
+    <string name="no_favorite_repos">Nessun repository preferito</string>
+
+    <!-- Developer Profile - Repository Item -->
+    <string name="updated_x_ago">Aggiornato %1$s fa</string>
+    <string name="has_release">Ha una release</string>
+
+    <!-- Developer Profile - Relative Time -->
+    <string name="time_years_ago">%1$d a fa</string>
+    <string name="time_months_ago">%1$d m fa</string>
+    <string name="time_days_ago">%1$d g fa</string>
+    <string name="time_hours_ago">%1$d h fa</string>
+    <string name="time_minutes_ago">%1$d min fa</string>
+
+    <!-- Developer Profile - Count Formatting -->
+    <string name="count_millions">%1$dM</string>
+    <string name="count_thousands">%1$dk</string>
 </resources>

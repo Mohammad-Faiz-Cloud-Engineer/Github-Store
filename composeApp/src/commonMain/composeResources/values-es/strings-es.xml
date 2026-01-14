@@ -224,4 +224,51 @@
     <string name="dismiss">Cerrar</string>
     <string name="sync_starred_failed">No se pudieron sincronizar los repositorios destacados</string>
 
+    <string name="developer_profile_title">Perfil del desarrollador</string>
+    <string name="open_developer_profile">Abrir perfil de desarrollador</string>
+
+    <!-- Developer Profile - General -->
+    <string name="failed_to_load_repositories">Error al cargar repositorios</string>
+    <string name="failed_to_load_profile">Error al cargar perfil</string>
+
+    <!-- Developer Profile - Stats -->
+    <string name="repositories">Repositorios</string>
+    <string name="followers">Seguidores</string>
+    <string name="following">Siguiendo</string>
+
+    <!-- Developer Profile - Filter & Sort -->
+    <string name="search_repositories">Buscar repositorios…</string>
+    <string name="clear_search">Borrar búsqueda</string>
+    <string name="filter_all">Todos</string>
+    <string name="filter_with_releases">Con lanzamientos</string>
+    <string name="filter_installed">Instalados</string>
+    <string name="filter_favorites">Favoritos</string>
+    <string name="sort">Ordenar</string>
+    <string name="sort_recently_updated">Actualizados recientemente</string>
+    <string name="sort_name">Nombre</string>
+
+    <!-- Developer Profile - Repository Count -->
+    <string name="repository_singular">repositorio</string>
+    <string name="repositories_plural">repositorios</string>
+    <string name="showing_x_of_y_repositories">Mostrando %1$d de %2$d repositorios</string>
+
+    <!-- Developer Profile - Empty States -->
+    <string name="no_repos_with_releases">No hay repositorios con lanzamientos instalables</string>
+    <string name="no_installed_repos">No hay repositorios instalados</string>
+    <string name="no_favorite_repos">No hay repositorios favoritos</string>
+
+    <!-- Developer Profile - Repository Item -->
+    <string name="updated_x_ago">Actualizado hace %1$s</string>
+    <string name="has_release">Tiene lanzamiento</string>
+
+    <!-- Developer Profile - Relative Time -->
+    <string name="time_years_ago">hace %1$d año(s)</string>
+    <string name="time_months_ago">hace %1$d mes(es)</string>
+    <string name="time_days_ago">hace %1$d d</string>
+    <string name="time_hours_ago">hace %1$d h</string>
+    <string name="time_minutes_ago">hace %1$d min</string>
+
+    <!-- Developer Profile - Count Formatting -->
+    <string name="count_millions">%1$dM</string>
+    <string name="count_thousands">%1$dk</string>
 </resources>

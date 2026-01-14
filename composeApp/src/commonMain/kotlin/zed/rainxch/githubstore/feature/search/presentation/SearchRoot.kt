@@ -79,6 +79,7 @@ import zed.rainxch.githubstore.feature.search.presentation.components.LanguageFi
 fun SearchRoot(
     onNavigateBack: () -> Unit,
     onNavigateToDetails: (GithubRepoSummary) -> Unit,
+    onNavigateToDeveloperProfile: (username: String) -> Unit,
     viewModel: SearchViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -105,6 +106,10 @@ fun SearchRoot(
 
                 SearchAction.OnNavigateBackClick -> {
                     onNavigateBack()
+                }
+
+                is SearchAction.OnRepositoryDeveloperClick -> {
+                    onNavigateToDeveloperProfile(action.username)
                 }
 
                 else -> {
@@ -343,6 +348,9 @@ fun SearchScreen(
                                 discoveryRepository = discoveryRepository,
                                 onClick = {
                                     onAction(SearchAction.OnRepositoryClick(discoveryRepository.repository))
+                                },
+                                onDeveloperClick = { username ->
+                                    onAction(SearchAction.OnRepositoryDeveloperClick(username))
                                 },
                                 modifier = Modifier.animateItem()
                             )

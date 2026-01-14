@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import githubstore.composeapp.generated.resources.Res
@@ -40,6 +41,7 @@ import zed.rainxch.githubstore.feature.favourites.presentation.components.Favour
 fun FavouritesRoot(
     onNavigateBack: () -> Unit,
     onNavigateToDetails: (repoId: Long) -> Unit,
+    onNavigateToDeveloperProfile: (username: String) -> Unit,
     viewModel: FavouritesViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -54,6 +56,10 @@ fun FavouritesRoot(
 
                 is FavouritesAction.OnRepositoryClick -> {
                     onNavigateToDetails(action.favouriteRepository.repoId)
+                }
+
+                is FavouritesAction.OnDeveloperProfileClick -> {
+                    onNavigateToDeveloperProfile(action.username)
                 }
 
                 else -> {
@@ -102,6 +108,9 @@ fun FavouritesScreen(
                         onItemClick = {
                             onAction(FavouritesAction.OnRepositoryClick(repo))
                         },
+                        onDevProfileClick = {
+                            onAction(FavouritesAction.OnDeveloperProfileClick(repo.repoOwner))
+                        },
                         modifier = Modifier.Companion.animateItem()
                     )
                 }
@@ -126,6 +135,7 @@ private fun FavouritesTopbar(
             Text(
                 text = stringResource(Res.string.favourites),
                 style = MaterialTheme.typography.titleMediumEmphasized,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
         },

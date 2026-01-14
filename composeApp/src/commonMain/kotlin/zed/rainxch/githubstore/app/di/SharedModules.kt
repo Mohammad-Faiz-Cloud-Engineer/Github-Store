@@ -34,11 +34,14 @@ import zed.rainxch.githubstore.core.data.services.Downloader
 import zed.rainxch.githubstore.core.data.services.Installer
 import zed.rainxch.githubstore.core.domain.repository.StarredRepository
 import zed.rainxch.githubstore.core.domain.use_cases.SyncInstalledAppsUseCase
+import zed.rainxch.githubstore.feature.developer_profile.data.repository.DeveloperProfileRepositoryImpl
+import zed.rainxch.githubstore.feature.developer_profile.domain.repository.DeveloperProfileRepository
 import zed.rainxch.githubstore.feature.favourites.presentation.FavouritesViewModel
 import zed.rainxch.githubstore.feature.home.data.data_source.CachedTrendingDataSource
 import zed.rainxch.githubstore.feature.home.data.repository.HomeRepositoryImpl
 import zed.rainxch.githubstore.feature.home.domain.repository.HomeRepository
 import zed.rainxch.githubstore.feature.home.presentation.HomeViewModel
+import zed.rainxch.githubstore.feature.developer_profile.presentation.DeveloperProfileViewModel
 import zed.rainxch.githubstore.feature.search.data.repository.SearchRepositoryImpl
 import zed.rainxch.githubstore.feature.search.domain.repository.SearchRepository
 import zed.rainxch.githubstore.feature.search.presentation.SearchViewModel
@@ -237,6 +240,26 @@ val detailsModule: Module = module {
             packageMonitor = get<PackageMonitor>(),
             syncInstalledAppsUseCase = get(),
             starredRepository = get()
+        )
+    }
+}
+val repoAuthorModule: Module = module {
+    // Repository
+    single<DeveloperProfileRepository> {
+        DeveloperProfileRepositoryImpl(
+            httpClient = get(),
+            platform = get(),
+            installedAppsDao = get(),
+            favouritesRepository = get()
+        )
+    }
+
+    // ViewModel
+    viewModel { params ->
+        DeveloperProfileViewModel(
+            repository = get(),
+            favouritesRepository = get(),
+            username = params.get(),
         )
     }
 }

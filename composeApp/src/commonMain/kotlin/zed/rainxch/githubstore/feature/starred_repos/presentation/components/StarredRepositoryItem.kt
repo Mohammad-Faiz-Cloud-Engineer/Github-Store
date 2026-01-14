@@ -1,22 +1,19 @@
 package zed.rainxch.githubstore.feature.starred_repos.presentation.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CallSplit
 import androidx.compose.material.icons.filled.Favorite
@@ -25,8 +22,6 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.Icon
@@ -39,17 +34,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
+import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.coil3.CoilImage
-import com.skydoves.landscapist.components.rememberImageComponent
-import com.skydoves.landscapist.crossfade.CrossfadePlugin
+import githubstore.composeapp.generated.resources.Res
+import githubstore.composeapp.generated.resources.add_to_favourites
+import githubstore.composeapp.generated.resources.count_thousands
+import githubstore.composeapp.generated.resources.forks
+import githubstore.composeapp.generated.resources.installed
+import githubstore.composeapp.generated.resources.issues
+import githubstore.composeapp.generated.resources.remove_from_favourites
+import githubstore.composeapp.generated.resources.stars
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import zed.rainxch.githubstore.core.presentation.theme.GithubStoreTheme
-import zed.rainxch.githubstore.feature.favourites.presentation.model.FavouriteRepository
 import zed.rainxch.githubstore.feature.starred_repos.presentation.model.StarredRepositoryUi
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -58,6 +58,7 @@ fun StarredRepositoryItem(
     repository: StarredRepositoryUi,
     onToggleFavoriteClick: () -> Unit,
     onItemClick: () -> Unit,
+    onDevProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -73,18 +74,28 @@ fun StarredRepositoryItem(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                AsyncImage(
-                    model = repository.repoOwnerAvatarUrl,
-                    contentDescription = "${repository.repoOwner}'s avatar",
+                CoilImage(
+                    imageModel = { repository.repoOwnerAvatarUrl },
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
+                        .clip(CircleShape)
+                        .clickable(onClick = {
+                            onDevProfileClick()
+                        }),
+                    imageOptions = ImageOptions(
+                        contentScale = ContentScale.Crop
+                    ),
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(onClick = {
+                            onDevProfileClick()
+                        })
+                ) {
                     Text(
                         text = repository.repoName,
                         style = MaterialTheme.typography.titleMedium,
@@ -114,9 +125,9 @@ fun StarredRepositoryItem(
                             Icons.Outlined.FavoriteBorder
                         },
                         contentDescription = if (repository.isFavorite) {
-                            "Remove from favorites"
+                            stringResource(Res.string.remove_from_favourites)
                         } else {
-                            "Add to favorites"
+                            stringResource(Res.string.add_to_favourites)
                         },
                         modifier = Modifier.size(20.dp)
                     )
@@ -147,20 +158,20 @@ fun StarredRepositoryItem(
                 StatChip(
                     icon = Icons.Default.Star,
                     label = formatCount(repository.stargazersCount),
-                    contentDescription = "${repository.stargazersCount} stars"
+                    contentDescription = "${repository.stargazersCount} ${stringResource(Res.string.stars)}"
                 )
 
                 StatChip(
                     icon = Icons.AutoMirrored.Filled.CallSplit,
                     label = formatCount(repository.forksCount),
-                    contentDescription = "${repository.forksCount} forks"
+                    contentDescription = "${repository.forksCount} ${stringResource(Res.string.forks)}"
                 )
 
                 if (repository.openIssuesCount > 0) {
                     StatChip(
                         icon = Icons.Outlined.Warning,
                         label = formatCount(repository.openIssuesCount),
-                        contentDescription = "${repository.openIssuesCount} open issues"
+                        contentDescription = "${repository.openIssuesCount} ${stringResource(Res.string.issues)}"
                     )
                 }
 
@@ -191,7 +202,7 @@ fun StarredRepositoryItem(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
-                                text = "Installed",
+                                text = stringResource(Res.string.installed),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
@@ -243,9 +254,10 @@ private fun StatChip(
     }
 }
 
+@Composable
 private fun formatCount(count: Int): String {
     return when {
-        count >= 1000 -> "${count / 1000}k"
+        count >= 1000 -> stringResource(Res.string.count_thousands, count / 1000)
         else -> count.toString()
     }
 }
@@ -273,7 +285,8 @@ private fun PreviewStarredRepoItem() {
                 starredAt = null
             ),
             onToggleFavoriteClick = {},
-            onItemClick = {}
+            onItemClick = {},
+            onDevProfileClick = {}
         )
     }
 }

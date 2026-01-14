@@ -81,6 +81,7 @@ fun HomeRoot(
     onNavigateToSearch: () -> Unit,
     onNavigateToApps: () -> Unit,
     onNavigateToDetails: (zed.rainxch.githubstore.core.domain.model.GithubRepoSummary) -> Unit,
+    onNavigateToDeveloperProfile: (username: String) -> Unit,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -101,7 +102,13 @@ fun HomeRoot(
                     onNavigateToApps()
                 }
 
-                is HomeAction.OnRepositoryClick -> onNavigateToDetails(action.repo)
+                is HomeAction.OnRepositoryClick -> {
+                    onNavigateToDetails(action.repo)
+                }
+
+                is HomeAction.OnRepositoryDeveloperClick -> {
+                    onNavigateToDeveloperProfile(action.username)
+                }
 
                 else -> {
                     viewModel.onAction(action)
@@ -199,6 +206,9 @@ private fun MainState(
                     discoveryRepository = homeRepo,
                     onClick = {
                         onAction(HomeAction.OnRepositoryClick(homeRepo.repository))
+                    },
+                    onDeveloperClick = { username ->
+                        onAction(HomeAction.OnRepositoryDeveloperClick(username))
                     },
                     modifier = Modifier
                         .animateItem()

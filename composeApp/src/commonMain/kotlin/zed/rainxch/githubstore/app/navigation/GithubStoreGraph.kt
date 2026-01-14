@@ -4,7 +4,7 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface GithubStoreGraph: NavKey {
+sealed interface GithubStoreGraph : NavKey {
     @Serializable
     data object HomeScreen : GithubStoreGraph
 
@@ -17,6 +17,11 @@ sealed interface GithubStoreGraph: NavKey {
     @Serializable
     data class DetailsScreen(
         val repositoryId: Long
+    ) : GithubStoreGraph
+
+    @Serializable
+    data class DeveloperProfileScreen(
+        val username: String
     ) : GithubStoreGraph
 
     @Serializable

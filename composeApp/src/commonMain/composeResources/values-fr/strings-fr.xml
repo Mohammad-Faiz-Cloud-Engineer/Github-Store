@@ -224,4 +224,51 @@
     <string name="dismiss">Fermer</string>
     <string name="sync_starred_failed">Échec de la synchronisation des dépôts favoris</string>
 
+    <string name="developer_profile_title">Profil du développeur</string>
+    <string name="open_developer_profile">Ouvrir le profil du développeur</string>
+
+    <!-- Developer Profile - General -->
+    <string name="failed_to_load_repositories">Échec du chargement des dépôts</string>
+    <string name="failed_to_load_profile">Échec du chargement du profil</string>
+
+    <!-- Developer Profile - Stats -->
+    <string name="repositories">Dépôts</string>
+    <string name="followers">Abonnés</string>
+    <string name="following">Abonnements</string>
+
+    <!-- Developer Profile - Filter & Sort -->
+    <string name="search_repositories">Rechercher des dépôts…</string>
+    <string name="clear_search">Effacer la recherche</string>
+    <string name="filter_all">Tous</string>
+    <string name="filter_with_releases">Avec versions</string>
+    <string name="filter_installed">Installés</string>
+    <string name="filter_favorites">Favoris</string>
+    <string name="sort">Trier</string>
+    <string name="sort_recently_updated">Récemment mis à jour</string>
+    <string name="sort_name">Nom</string>
+
+    <!-- Developer Profile - Repository Count -->
+    <string name="repository_singular">dépôt</string>
+    <string name="repositories_plural">dépôts</string>
+    <string name="showing_x_of_y_repositories">Affichage de %1$d sur %2$d dépôts</string>
+
+    <!-- Developer Profile - Empty States -->
+    <string name="no_repos_with_releases">Aucun dépôt avec des versions installables</string>
+    <string name="no_installed_repos">Aucun dépôt installé</string>
+    <string name="no_favorite_repos">Aucun dépôt favori</string>
+
+    <!-- Developer Profile - Repository Item -->
+    <string name="updated_x_ago">Mis à jour %1$s</string>
+    <string name="has_release">A une version</string>
+
+    <!-- Developer Profile - Relative Time -->
+    <string name="time_years_ago">il y a %1$d an(s)</string>
+    <string name="time_months_ago">il y a %1$d mois</string>
+    <string name="time_days_ago">il y a %1$d j</string>
+    <string name="time_hours_ago">il y a %1$d h</string>
+    <string name="time_minutes_ago">il y a %1$d min</string>
+
+    <!-- Developer Profile - Count Formatting -->
+    <string name="count_millions">%1$dM</string>
+    <string name="count_thousands">%1$dk</string>
 </resources>

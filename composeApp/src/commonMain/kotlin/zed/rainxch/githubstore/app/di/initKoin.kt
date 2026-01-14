@@ -15,6 +15,7 @@ fun initKoin(config: KoinAppDeclaration? = null) {
             favouritesModule,
             starredReposModule,
             detailsModule,
+            repoAuthorModule,
             settingsModule,
             appsModule
         )

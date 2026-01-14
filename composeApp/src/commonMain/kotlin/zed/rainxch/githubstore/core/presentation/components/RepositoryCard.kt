@@ -1,5 +1,6 @@
 package zed.rainxch.githubstore.core.presentation.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,6 +59,7 @@ import zed.rainxch.githubstore.core.presentation.utils.formatUpdatedAt
 fun RepositoryCard(
     discoveryRepository: DiscoveryRepository,
     onClick: () -> Unit,
+    onDeveloperClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uriHandler = LocalUriHandler.current
@@ -103,32 +105,40 @@ fun RepositoryCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    CoilImage(
-                        imageModel = { discoveryRepository.repository.owner.avatarUrl },
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape),
-                        loading = {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularWavyProgressIndicator()
+                    Row (
+                        modifier = Modifier.clickable(onClick = {
+                            onDeveloperClick(discoveryRepository.repository.owner.login )
+                        }),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CoilImage(
+                            imageModel = { discoveryRepository.repository.owner.avatarUrl },
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape),
+                            loading = {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularWavyProgressIndicator()
+                                }
+                            },
+                            component = rememberImageComponent {
+                                CrossfadePlugin()
                             }
-                        },
-                        component = rememberImageComponent {
-                            CrossfadePlugin()
-                        }
-                    )
+                        )
 
-                    Text(
-                        text = discoveryRepository.repository.owner.login,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.outline,
-                        maxLines = 1,
-                        softWrap = false,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                        Text(
+                            text = discoveryRepository.repository.owner.login,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.outline,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
 
                     Text(
                         text = "/ ${discoveryRepository.repository.name}",
@@ -343,6 +353,7 @@ fun RepositoryCardPreview() {
                 isStarred = false
             ),
             onClick = { },
+            onDeveloperClick = { }
         )
     }
 }
