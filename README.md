@@ -292,6 +292,15 @@ automatically—no manual submission required.
 
 ---
 
+## 🔐 Github-Store APK Signing Certificate
+
+All official GitHub Store releases are signed with the following certificate fingerprint:
+
+SHA-256:
+B7:F2:8E:19:8E:48:C1:93:B0:38:C6:5D:92:DD:F7:BC:07:7B:0D:B5:9E:BC:9B:25:0A:6D:AC:48:C1:18:03:CA
+
+---
+
 ## ☕ Support the project
 
 **GitHub Store** has reached **48,000+ active users** and **5,500+ GitHub stars** — and it's **100% free** with no ads, no tracking, and no premium features.
