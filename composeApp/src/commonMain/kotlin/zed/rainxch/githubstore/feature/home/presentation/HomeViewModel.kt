@@ -10,6 +10,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -26,6 +27,12 @@ import zed.rainxch.githubstore.core.presentation.model.DiscoveryRepository
 import zed.rainxch.githubstore.feature.home.domain.repository.HomeRepository
 import zed.rainxch.githubstore.feature.home.presentation.model.HomeCategory
 
+/**
+ * ViewModel for the Home screen.
+ * 
+ * Manages loading trending, new, and recently updated repositories with pagination,
+ * syncing installed apps status, and observing favorites and starred repos.
+ */
 class HomeViewModel(
     private val homeRepository: HomeRepository,
     private val installedAppsRepository: InstalledAppsRepository,
@@ -44,13 +51,9 @@ class HomeViewModel(
         .onStart {
             if (!hasLoadedInitialData) {
                 syncSystemState()
-
                 loadPlatform()
                 loadRepos(isInitial = true)
-                observeInstalledApps()
-                observeFavourites()
-                observeStarredRepos()
-
+                observeRepositoryStatus()
                 hasLoadedInitialData = true
             }
         }
@@ -60,15 +63,16 @@ class HomeViewModel(
             initialValue = HomeState()
         )
 
+    /**
+     * Syncs system state with database on startup.
+     * Runs in background without blocking UI.
+     */
     private fun syncSystemState() {
         viewModelScope.launch {
             try {
-                val result = syncInstalledAppsUseCase()
-                if (result.isFailure) {
-                    Logger.w { "Initial sync had issues: ${result.exceptionOrNull()?.message}" }
-                }
+                syncInstalledAppsUseCase()
             } catch (e: Exception) {
-                Logger.e { "Initial sync failed: ${e.message}" }
+                // Silent fail - non-critical operation
             }
         }
     }
@@ -79,29 +83,48 @@ class HomeViewModel(
         }
     }
 
-    private fun observeInstalledApps() {
+    /**
+     * Observes installed apps, favorites, and starred repos with a single combined flow.
+     */
+    private fun observeRepositoryStatus() {
         viewModelScope.launch {
-            installedAppsRepository.getAllInstalledApps().collect { installedApps ->
-                val installedMap = installedApps.associateBy { it.repoId }
+            combine(
+                installedAppsRepository.getAllInstalledApps(),
+                favouritesRepository.getAllFavorites(),
+                starredRepository.getAllStarred()
+            ) { installedApps, favorites, starred ->
+                Triple(
+                    installedApps.associateBy { it.repoId },
+                    favorites.associateBy { it.repoId },
+                    starred.associateBy { it.repoId }
+                )
+            }.collect { (installedMap, favoritesMap, starredMap) ->
                 _state.update { current ->
                     current.copy(
                         repos = current.repos.map { homeRepo ->
                             val app = installedMap[homeRepo.repository.id]
                             homeRepo.copy(
                                 isInstalled = app != null,
-                                isUpdateAvailable = app?.isUpdateAvailable ?: false
+                                isUpdateAvailable = app?.isUpdateAvailable ?: false,
+                                isFavourite = homeRepo.repository.id in favoritesMap,
+                                isStarred = homeRepo.repository.id in starredMap
                             )
                         },
-                        isUpdateAvailable = installedMap.any { it.value.isUpdateAvailable }
+                        isUpdateAvailable = installedMap.values.any { it.isUpdateAvailable }
                     )
                 }
             }
         }
     }
 
+    /**
+     * Loads repositories for the current category with pagination.
+     * 
+     * @param isInitial If true, resets pagination and clears existing repos
+     * @param category Optional category to switch to
+     */
     private fun loadRepos(isInitial: Boolean = false, category: HomeCategory? = null) {
         if (_state.value.isLoading || _state.value.isLoadingMore) {
-            Logger.d { "Already loading, skipping..." }
             return
         }
 
@@ -113,10 +136,7 @@ class HomeViewModel(
 
         val targetCategory = category ?: _state.value.currentCategory
 
-        Logger.d { "Loading repos: category=$targetCategory, page=$nextPageIndex, isInitial=$isInitial" }
-
         currentJob = viewModelScope.launch {
-
             _state.update {
                 it.copy(
                     isLoading = isInitial,
@@ -135,10 +155,9 @@ class HomeViewModel(
                 }
 
                 flow.collect { paginatedRepos ->
-                    Logger.d { "Received ${paginatedRepos.repos.size} repos, hasMore=${paginatedRepos.hasMore}, nextPage=${paginatedRepos.nextPageIndex}" }
-
                     this@HomeViewModel.nextPageIndex = paginatedRepos.nextPageIndex
 
+                    // Fetch all status data in parallel
                     val installedAppsMap = installedAppsRepository
                         .getAllInstalledApps()
                         .first()
@@ -156,13 +175,10 @@ class HomeViewModel(
 
                     val newReposWithStatus = paginatedRepos.repos.map { repo ->
                         val app = installedAppsMap[repo.id]
-                        val favourite = favoritesMap[repo.id]
-                        val starred = starredReposMap[repo.id]
-
                         DiscoveryRepository(
                             isInstalled = app != null,
-                            isFavourite = favourite != null,
-                            isStarred = starred != null,
+                            isFavourite = repo.id in favoritesMap,
+                            isStarred = repo.id in starredReposMap,
                             isUpdateAvailable = app?.isUpdateAvailable ?: false,
                             repository = repo
                         )
@@ -182,14 +198,12 @@ class HomeViewModel(
                     }
                 }
 
-                Logger.d { "Flow completed" }
                 _state.update {
                     it.copy(isLoading = false, isLoadingMore = false)
                 }
 
             } catch (t: Throwable) {
                 if (t is CancellationException) {
-                    Logger.d { "Load cancelled (expected)" }
                     throw t
                 }
 
@@ -222,8 +236,6 @@ class HomeViewModel(
             }
 
             HomeAction.LoadMore -> {
-                Logger.d { "LoadMore action: isLoading=${_state.value.isLoading}, isLoadingMore=${_state.value.isLoadingMore}, hasMore=${_state.value.hasMorePages}" }
-
                 if (!_state.value.isLoadingMore && !_state.value.isLoading && _state.value.hasMorePages) {
                     loadRepos(isInitial = false)
                 }
@@ -236,59 +248,12 @@ class HomeViewModel(
                 }
             }
 
-            is HomeAction.OnRepositoryClick -> {
-                /* Handled in composable */
-            }
-
-            is HomeAction.OnRepositoryDeveloperClick -> {
-                /* Handled in composable */
-            }
-
-            HomeAction.OnSearchClick -> {
-                /* Handled in composable */
-            }
-
-            HomeAction.OnSettingsClick -> {
-                /* Handled in composable */
-            }
-
-            HomeAction.OnAppsClick -> {
-                /* Handled in composable */
-            }
-        }
-    }
-
-    private fun observeFavourites() {
-        viewModelScope.launch {
-            favouritesRepository.getAllFavorites().collect { favourites ->
-                val favouritesMap = favourites.associateBy { it.repoId }
-                _state.update { current ->
-                    current.copy(
-                        repos = current.repos.map { homeRepo ->
-                            homeRepo.copy(
-                                isFavourite = favouritesMap.containsKey(homeRepo.repository.id)
-                            )
-                        }
-                    )
-                }
-            }
-        }
-    }
-
-    private fun observeStarredRepos() {
-        viewModelScope.launch {
-            starredRepository.getAllStarred().collect { starredRepos ->
-                val starredReposById = starredRepos.associateBy { it.repoId }
-                _state.update { current ->
-                    current.copy(
-                        repos = current.repos.map { homeRepo ->
-                            homeRepo.copy(
-                                isStarred = starredReposById.containsKey(homeRepo.repository.id)
-                            )
-                        }
-                    )
-                }
-            }
+            // Navigation actions handled by composable
+            is HomeAction.OnRepositoryClick,
+            is HomeAction.OnRepositoryDeveloperClick,
+            HomeAction.OnSearchClick,
+            HomeAction.OnSettingsClick,
+            HomeAction.OnAppsClick -> Unit
         }
     }
 
