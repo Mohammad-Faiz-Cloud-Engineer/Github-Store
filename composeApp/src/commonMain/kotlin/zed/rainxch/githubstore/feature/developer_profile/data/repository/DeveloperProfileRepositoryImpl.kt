@@ -28,12 +28,22 @@ import zed.rainxch.githubstore.feature.developer_profile.domain.model.DeveloperP
 import zed.rainxch.githubstore.feature.developer_profile.domain.model.DeveloperRepository
 import zed.rainxch.githubstore.feature.developer_profile.domain.repository.DeveloperProfileRepository
 
+/**
+ * Implementation of [DeveloperProfileRepository] that fetches developer profile
+ * and repository data from GitHub API with pagination, filtering, and local data enrichment.
+ */
 class DeveloperProfileRepositoryImpl(
     private val httpClient: HttpClient,
     private val platform: Platform,
     private val installedAppsDao: InstalledAppDao,
     private val favouritesRepository: FavouritesRepository
 ) : DeveloperProfileRepository {
+    
+    companion object {
+        private const val REPOS_PER_PAGE = 100
+        private const val RELEASES_PER_PAGE = 10
+        private const val MAX_CONCURRENT_RELEASE_CHECKS = 20
+    }
 
     override suspend fun getDeveloperProfile(username: String): Result<DeveloperProfile> {
         return withContext(Dispatchers.IO) {
@@ -41,9 +51,9 @@ class DeveloperProfileRepositoryImpl(
                 val response = httpClient.get("/users/$username")
 
                 if (!response.status.isSuccess()) {
-                    return@withContext Result.failure(
-                        Exception("Failed to fetch developer profile: ${response.status.description}")
-                    )
+                    val errorMessage = "Failed to fetch developer profile: ${response.status.description}"
+                    Logger.e { errorMessage }
+                    return@withContext Result.failure(Exception(errorMessage))
                 }
 
                 val userResponse: GitHubUserResponse = response.body()
@@ -60,52 +70,32 @@ class DeveloperProfileRepositoryImpl(
     override suspend fun getDeveloperRepositories(username: String): Result<List<DeveloperRepository>> {
         return withContext(Dispatchers.IO) {
             try {
-                val allRepos = mutableListOf<GitHubRepoResponse>()
-                var page = 1
-                val perPage = 100
-
-                while (true) {
-                    val response = httpClient.get("/users/$username/repos") {
-                        parameter("per_page", perPage)
-                        parameter("page", page)
-                        parameter("type", "owner")
-                        parameter("sort", "updated")
-                        parameter("direction", "desc")
-                    }
-
-                    if (!response.status.isSuccess()) {
-                        return@withContext Result.failure(
-                            Exception("Failed to fetch repositories: ${response.status.description}")
-                        )
-                    }
-
-                    val repos: List<GitHubRepoResponse> = response.body()
-
-                    if (repos.isEmpty()) break
-
-                    allRepos.addAll(repos.filter { !it.archived && !it.fork })
-
-                    if (repos.size < perPage) break
-                    page++
+                // Fetch all repositories with pagination
+                val allRepos = fetchAllRepositories(username)
+                
+                if (allRepos.isEmpty()) {
+                    return@withContext Result.success(emptyList())
                 }
 
-                val allFavorites = favouritesRepository.getAllFavorites().first()
-                val favoriteIds = allFavorites.map { it.repoId }.toSet()
+                // Fetch favorites once for all repos
+                val favoriteIds = favouritesRepository.getAllFavorites()
+                    .first()
+                    .mapTo(HashSet()) { it.repoId }
 
+                // Process repositories in parallel with concurrency control
                 val processedRepos = coroutineScope {
-                    val semaphore = Semaphore(20)
-                    val deferredResults = allRepos.map { repo ->
+                    val semaphore = Semaphore(MAX_CONCURRENT_RELEASE_CHECKS)
+                    allRepos.map { repo ->
                         async {
                             semaphore.withPermit {
                                 processRepository(repo, favoriteIds)
                             }
                         }
-                    }
-                    deferredResults.awaitAll()
+                    }.awaitAll()
                 }
 
                 Result.success(processedRepos)
-            }  catch (e: CancellationException) {
+            } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Logger.e(e) { "Failed to fetch repositories for $username" }
@@ -113,16 +103,59 @@ class DeveloperProfileRepositoryImpl(
             }
         }
     }
+    
+    /**
+     * Fetches all repositories for a user with pagination.
+     * Filters out archived and forked repositories.
+     */
+    private suspend fun fetchAllRepositories(username: String): List<GitHubRepoResponse> {
+        val allRepos = mutableListOf<GitHubRepoResponse>()
+        var page = 1
 
+        while (true) {
+            val response = httpClient.get("/users/$username/repos") {
+                parameter("per_page", REPOS_PER_PAGE)
+                parameter("page", page)
+                parameter("type", "owner")
+                parameter("sort", "updated")
+                parameter("direction", "desc")
+            }
+
+            if (!response.status.isSuccess()) {
+                val errorMessage = "Failed to fetch repositories: ${response.status.description}"
+                Logger.e { errorMessage }
+                throw Exception(errorMessage)
+            }
+
+            val repos: List<GitHubRepoResponse> = response.body()
+            
+            if (repos.isEmpty()) break
+
+            // Filter out archived and forked repos immediately
+            allRepos.addAll(repos.filter { !it.archived && !it.fork })
+
+            if (repos.size < REPOS_PER_PAGE) break
+            page++
+        }
+
+        return allRepos
+    }
+
+    /**
+     * Processes a single repository by enriching it with:
+     * - Installation status from local database
+     * - Favorite status
+     * - Release information (has releases, installable assets, latest version)
+     */
     private suspend fun processRepository(
         repo: GitHubRepoResponse,
         favoriteIds: Set<Long>
     ): DeveloperRepository {
         val installedApp = installedAppsDao.getAppByRepoId(repo.id)
-        val isFavorite = favoriteIds.contains(repo.id)
+        val isFavorite = repo.id in favoriteIds
 
         val (hasReleases, hasInstallableAssets, latestVersion) = checkReleaseInfo(
-            owner = repo.fullName.split("/")[0],
+            owner = repo.fullName.substringBefore('/'),
             repoName = repo.name
         )
 
@@ -135,13 +168,20 @@ class DeveloperProfileRepositoryImpl(
         )
     }
 
+    /**
+     * Checks release information for a repository.
+     * Returns: (hasReleases, hasInstallableAssets, latestVersion)
+     * 
+     * Only considers stable releases (non-draft, non-prerelease).
+     * Checks for platform-specific installable assets.
+     */
     private suspend fun checkReleaseInfo(
         owner: String,
         repoName: String
     ): Triple<Boolean, Boolean, String?> {
         return try {
             val response = httpClient.get("/repos/$owner/$repoName/releases") {
-                parameter("per_page", 10)
+                parameter("per_page", RELEASES_PER_PAGE)
             }
 
             if (!response.status.isSuccess()) {
@@ -149,24 +189,23 @@ class DeveloperProfileRepositoryImpl(
             }
 
             val releases: List<ReleaseNetworkModel> = response.body()
+            
+            if (releases.isEmpty()) {
+                return Triple(false, false, null)
+            }
 
-            val stableRelease = releases.firstOrNull {
-                it.draft != true && it.prerelease != true
+            // Find first stable release (non-draft, non-prerelease)
+            val stableRelease = releases.firstOrNull { release ->
+                release.draft != true && release.prerelease != true
             }
 
             if (stableRelease == null) {
-                return Triple(releases.isNotEmpty(), false, null)
+                return Triple(true, false, null)
             }
 
+            // Check for platform-specific installable assets
             val hasInstallableAssets = stableRelease.assets.any { asset ->
-                val name = asset.name.lowercase()
-                when (platform.type) {
-                    PlatformType.ANDROID -> name.endsWith(".apk")
-                    PlatformType.WINDOWS -> name.endsWith(".msi") || name.endsWith(".exe")
-                    PlatformType.MACOS -> name.endsWith(".dmg") || name.endsWith(".pkg")
-                    PlatformType.LINUX -> name.endsWith(".appimage") || name.endsWith(".deb")
-                            || name.endsWith(".rpm")
-                }
+                isInstallableAsset(asset.name)
             }
 
             Triple(
@@ -177,8 +216,23 @@ class DeveloperProfileRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Logger.w(e) { "Failed to check releases for $owner/$repoName" }
+            // Silently fail for release checks to avoid blocking repository list
             Triple(false, false, null)
+        }
+    }
+    
+    /**
+     * Determines if an asset is installable on the current platform.
+     */
+    private fun isInstallableAsset(assetName: String): Boolean {
+        val name = assetName.lowercase()
+        return when (platform.type) {
+            PlatformType.ANDROID -> name.endsWith(".apk")
+            PlatformType.WINDOWS -> name.endsWith(".msi") || name.endsWith(".exe")
+            PlatformType.MACOS -> name.endsWith(".dmg") || name.endsWith(".pkg")
+            PlatformType.LINUX -> name.endsWith(".appimage") || 
+                                  name.endsWith(".deb") || 
+                                  name.endsWith(".rpm")
         }
     }
 
