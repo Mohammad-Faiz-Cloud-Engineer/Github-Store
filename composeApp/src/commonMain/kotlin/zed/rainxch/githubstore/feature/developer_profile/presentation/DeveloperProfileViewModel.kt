@@ -217,22 +217,26 @@ class DeveloperProfileViewModel(
                 lastSyncedAt = currentTime
             )
 
-            favouritesRepository.toggleFavorite(favoriteRepo)
+            try {
+                favouritesRepository.toggleFavorite(favoriteRepo)
 
-            // Update local state
-            _state.update { state ->
-                val updatedRepos = state.repositories.map {
-                    if (it.id == repo.id) {
-                        it.copy(isFavorite = !it.isFavorite)
-                    } else {
-                        it
-                    }
-                }.toImmutableList()
+                // Update local state only if database operation succeeded
+                _state.update { state ->
+                    val updatedRepos = state.repositories.map {
+                        if (it.id == repo.id) {
+                            it.copy(isFavorite = !it.isFavorite)
+                        } else {
+                            it
+                        }
+                    }.toImmutableList()
 
-                state.copy(repositories = updatedRepos)
+                    state.copy(repositories = updatedRepos)
+                }
+                
+                applyFiltersAndSort()
+            } catch (e: Exception) {
+                co.touchlab.kermit.Logger.e(e) { "Failed to toggle favorite for ${repo.name}" }
             }
-            
-            applyFiltersAndSort()
         }
     }
 }
