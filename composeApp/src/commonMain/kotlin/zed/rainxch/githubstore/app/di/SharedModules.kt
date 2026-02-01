@@ -106,6 +106,14 @@ val coreModule: Module = module {
         )
     }
 
+    single<zed.rainxch.githubstore.core.domain.use_cases.MigrateInstalledAppsDataUseCase> {
+        zed.rainxch.githubstore.core.domain.use_cases.MigrateInstalledAppsDataUseCase(
+            packageMonitor = get(),
+            installedAppsRepository = get(),
+            platform = get()
+        )
+    }
+
     // Repositories
     single<FavouritesRepository> {
         FavouritesRepositoryImpl(
@@ -132,9 +140,8 @@ val coreModule: Module = module {
             tokenDataSource = get(),
             themesRepository = get(),
             appStateManager = get(),
-            installedAppsRepository = get(),
-            packageMonitor = get(),
-            platform = get()
+            migrateInstalledAppsDataUseCase = get(),
+            installedAppsRepository = get()
         )
     }
 }
